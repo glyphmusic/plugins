@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "citrus",
+  "name": "Citrus",
+  "version": "1.0.0",
+  "author": "glyphmusic",
+  "description": "Lime and lemon on black.",
+  "license": "MIT",
+  "kind": "theme",
+  "theme": {
+    "accent": "#d4f54a",
+    "glow": ["#1a2204", "#7fae12", "#f3f57a"],
+    "base": "#030402"
+  }
+}

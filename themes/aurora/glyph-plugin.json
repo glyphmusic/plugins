@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "aurora",
+  "name": "Aurora",
+  "version": "1.0.0",
+  "author": "glyphmusic",
+  "description": "Teal light over a violet night sky.",
+  "license": "MIT",
+  "kind": "theme",
+  "theme": {
+    "accent": "#3ee6c1",
+    "glow": ["#0b0a3a", "#1f8f9e", "#7cf5c8"],
+    "base": "#020406"
+  }
+}

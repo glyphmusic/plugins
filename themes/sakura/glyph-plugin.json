@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "sakura",
+  "name": "Sakura",
+  "version": "1.0.0",
+  "author": "glyphmusic",
+  "description": "Soft cherry blossom pink.",
+  "license": "MIT",
+  "kind": "theme",
+  "theme": {
+    "accent": "#ffb7d0",
+    "glow": ["#2e0a1c", "#c2507e", "#ffd3e2"],
+    "base": "#050304"
+  }
+}
