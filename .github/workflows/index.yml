@@ -2,10 +2,10 @@ name: Index
 
 on:
   pull_request:
-    paths: ["plugins/**", "themes/**", "scripts/**"]
+    paths: ["plugins/**", "themes/**", "scripts/**", ".github/workflows/index.yml"]
   push:
     branches: [main]
-    paths: ["plugins/**", "themes/**", "scripts/**"]
+    paths: ["plugins/**", "themes/**", "scripts/**", ".github/workflows/index.yml"]
   workflow_dispatch:
   # Daily: fresh stars and update dates for the catalog.
   schedule:
