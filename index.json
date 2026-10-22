@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "plugins": [
+    {
+      "repo": "glyphmusic/plugins",
+      "path": "themes/aurora",
+      "rev": "dfb7ee1da9216b93c2e9a4757a3304f8aff69eac",
+      "manifest": {
+        "schema": 1,
+        "id": "aurora",
+        "name": "Aurora",
+        "version": "1.0.0",
+        "author": "glyphmusic",
+        "description": "Teal light over a violet night sky.",
+        "license": "MIT",
+        "kind": "theme",
+        "theme": {
+          "accent": "#3ee6c1",
+          "glow": [
+            "#0b0a3a",
+            "#1f8f9e",
+            "#7cf5c8"
+          ],
+          "base": "#020406"
+        }
+      },
+      "updated": "2026-10-22T22:15:49+02:00"
+    },
+    {
+      "repo": "glyphmusic/plugins",
+      "path": "themes/citrus",
+      "rev": "dfb7ee1da9216b93c2e9a4757a3304f8aff69eac",
+      "manifest": {
+        "schema": 1,
+        "id": "citrus",
+        "name": "Citrus",
+        "version": "1.0.0",
+        "author": "glyphmusic",
+        "description": "Lime and lemon on black.",
+        "license": "MIT",
+        "kind": "theme",
+        "theme": {
+          "accent": "#d4f54a",
+          "glow": [
+            "#1a2204",
+            "#7fae12",
+            "#f3f57a"
+          ],
+          "base": "#030402"
+        }
+      },
+      "updated": "2026-10-22T22:15:49+02:00"
+    },
+    {
+      "repo": "glyphmusic/plugins",
+      "path": "themes/sakura",
+      "rev": "dfb7ee1da9216b93c2e9a4757a3304f8aff69eac",
+      "manifest": {
+        "schema": 1,
+        "id": "sakura",
+        "name": "Sakura",
+        "version": "1.0.0",
+        "author": "glyphmusic",
+        "description": "Soft cherry blossom pink.",
+        "license": "MIT",
+        "kind": "theme",
+        "theme": {
+          "accent": "#ffb7d0",
+          "glow": [
+            "#2e0a1c",
+            "#c2507e",
+            "#ffd3e2"
+          ],
+          "base": "#050304"
+        }
+      },
+      "updated": "2026-10-22T22:15:49+02:00"
+    }
+  ]
+}
