@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Checks glyph-plugin.json files with the rules Glyph uses, and shows a
-// theme's colours in the terminal. For plugin makers, before publishing:
+// Checks glyph-plugin.json files with the rules Glyph uses, shows a
+// theme's colours in the terminal and, for local files of extensions, checks
+// the code (`main`) next to the manifest. For plugin makers, before
+// publishing:
 //
 //   node validate.mjs                          ./glyph-plugin.json
 //   node validate.mjs path/to/glyph-plugin.json themes/*/glyph-plugin.json
@@ -13,8 +15,9 @@
 //
 // Exit code 1 when any file has a problem. No dependencies: Node 20+.
 
-import {readFileSync} from 'node:fs';
-import {MANIFEST, validate, hexValue} from './manifest.mjs';
+import {readFileSync, existsSync} from 'node:fs';
+import {dirname, join} from 'node:path';
+import {MANIFEST, validate, hexValue, checkCode} from './manifest.mjs';
 
 const files = process.argv.slice(2);
 if (!files.length) files.push(MANIFEST);
@@ -46,6 +49,15 @@ for (const file of files) {
     continue;
   }
   const problems = validate(manifest);
+  // The code next to a local manifest (URLs: the index CI checks it).
+  if (!problems.length && manifest.main && !/^https?:\/\//.test(file)) {
+    const code = join(dirname(file), manifest.main);
+    if (!existsSync(code)) problems.push(`main: ${code} does not exist (build the plugin first)`);
+    else {
+      const p = checkCode(readFileSync(code));
+      if (p) problems.push(`main: ${p}`);
+    }
+  }
   if (problems.length) {
     console.log(`✗ ${file}`);
     for (const p of problems) console.log(`  - ${p}`);
@@ -53,12 +65,22 @@ for (const file of files) {
     continue;
   }
   console.log(`✓ ${file}: ${manifest.name} ${manifest.version} (id ${manifest.id}, ${manifest.kind})`);
-  if (manifest.kind === 'theme') {
+  if (manifest.theme) {
     const t = manifest.theme;
     console.log(`  accent  ${swatch(t.accent)}`);
     if (t.glow) console.log(`  glow    ${t.glow.map(swatch).join('  ')}`);
     else console.log('  glow    (none: each view uses its own colours)');
     console.log(`  base    ${t.base ? swatch(t.base) : '(default #030303)'}`);
+  }
+  if (manifest.kind === 'extension') {
+    const list = (label, items) => items?.length && console.log(`  ${label.padEnd(12)}${items.join(', ')}`);
+    if (manifest.main) console.log(`  code        ${manifest.main}`);
+    list('permissions', manifest.permissions);
+    list('network', manifest.network);
+    list('settings', manifest.settings?.map(s => `${s.id} (${s.page ?? 'own'}, ${s.items.length} items)`));
+    list('menus', manifest.menus?.map(m => m.id));
+    if (manifest.strings) list('texts', Object.entries(manifest.strings).map(([l, t]) => `${l}: ${Object.keys(t).length}`));
+    list('hides', manifest.hide);
   }
 }
 if (failed) {

@@ -2,7 +2,8 @@
 // shows). Each entry names a repo, an optional folder and a pinned commit;
 // this script fetches the manifest at that commit, checks it with the same
 // rules as the app (manifest.mjs, mirroring glyph-core/src/plugins.rs) and
-// embeds it.
+// embeds it. Plugins with code also need their .wasm (`main`) at that
+// commit: a WebAssembly module of at most 16 MiB.
 //
 //   node scripts/build-index.mjs          write index.json
 //   node scripts/build-index.mjs --check  only validate (pull requests)
@@ -19,7 +20,10 @@
 import {readFileSync, writeFileSync, readdirSync, existsSync} from 'node:fs';
 import {execSync} from 'node:child_process';
 
-import {MANIFEST, SCHEMA, validate, validId, validRepo, validPath} from './manifest.mjs';
+import {MANIFEST, MAX_CODE, checkCode, validate, validRepo, validPath} from './manifest.mjs';
+
+/** Format of index.json itself (not of the manifests inside). */
+const INDEX_FORMAT = 1;
 
 const SELF = 'glyphmusic/plugins';
 const check = process.argv.includes('--check');
@@ -48,6 +52,25 @@ function lastCommit(path) {
   catch { return undefined; }
 }
 
+/** Problem with the plugin's code (its `main`) at `rev`, or null. */
+async function codeProblem(entry, rev, main) {
+  const file = entry.path ? `${entry.path}/${main}` : main;
+  let bytes;
+  if (entry.repo === SELF && entry.rev === 'self') {
+    const local = new URL(file, root);
+    if (!existsSync(local)) return `${file} (main) does not exist in this repo`;
+    bytes = readFileSync(local);
+  } else {
+    const url = `https://raw.githubusercontent.com/${entry.repo}/${rev}/${file}`;
+    const r = await fetch(url, {headers: {'user-agent': 'glyph-plugins-index'}});
+    if (!r.ok) return `${url} (main): HTTP ${r.status}`;
+    const len = Number(r.headers.get('content-length') ?? 0);
+    if (len > MAX_CODE) return `the code is larger than ${MAX_CODE / 1024 / 1024} MiB`;
+    bytes = new Uint8Array(await r.arrayBuffer());
+  }
+  return checkCode(bytes);
+}
+
 async function manifestOf(entry, rev) {
   const file = entry.path ? `${entry.path}/${MANIFEST}` : MANIFEST;
   if (entry.repo === SELF && entry.rev === 'self') {
@@ -59,7 +82,7 @@ async function manifestOf(entry, rev) {
   const r = await fetch(url, {headers: {'user-agent': 'glyph-plugins-index'}});
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   const text = await r.text();
-  if (text.length > 64 * 1024) throw new Error(`${file} is larger than 64 KiB`);
+  if (text.length > 256 * 1024) throw new Error(`${file} is larger than 256 KiB`);
   return JSON.parse(text);
 }
 
@@ -89,6 +112,10 @@ for (const f of files) {
   const errs = validate(manifest);
   if (manifest?.id && `${manifest.id}.json` !== f) errs.push(`file must be named ${manifest.id}.json`);
   if (manifest?.id && ids.has(manifest.id)) errs.push(`id ${manifest.id} is used twice`);
+  if (!errs.length && manifest.main) {
+    const p = await codeProblem(entry, rev, manifest.main);
+    if (p) errs.push(p);
+  }
   if (errs.length) { problems.push(...errs.map(e => `${where}: ${e}`)); continue; }
   ids.add(manifest.id);
   const out = {repo: entry.repo, path: entry.path, rev, manifest};
@@ -112,6 +139,6 @@ if (problems.length) {
 plugins.sort((a, b) => a.manifest.id.localeCompare(b.manifest.id));
 console.log(`${plugins.length} plugin(s) valid: ${plugins.map(p => p.manifest.id).join(', ')}`);
 if (!check) {
-  writeFileSync(new URL('index.json', root), JSON.stringify({schema: SCHEMA, plugins}, null, 2) + '\n');
+  writeFileSync(new URL('index.json', root), JSON.stringify({schema: INDEX_FORMAT, plugins}, null, 2) + '\n');
   console.log('index.json written');
 }

@@ -2,33 +2,417 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/glyphmusic/plugins/main/schema/glyph-plugin.schema.json",
   "title": "Glyph plugin manifest",
+  "description": "glyph-plugin.json. Full reference: https://docs.glyph.my/plugins/manifest",
   "type": "object",
-  "required": ["id", "name", "version", "kind"],
+  "required": [
+    "id",
+    "name",
+    "version",
+    "kind"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "schema": { "const": 1 },
-    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "minLength": 2, "maxLength": 40 },
-    "name": { "type": "string", "minLength": 1, "maxLength": 40 },
-    "version": { "type": "string", "description": "Semantic version, e.g. 1.0.0" },
-    "author": { "type": "string", "maxLength": 40 },
-    "description": { "type": "string", "maxLength": 200 },
-    "license": { "type": "string", "maxLength": 40 },
-    "min_app": { "type": "string", "description": "Oldest Glyph version the plugin works with" },
-    "kind": { "enum": ["theme"] },
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "enum": [
+        1,
+        2
+      ],
+      "description": "1: themes. 2: extensions (and themes)."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 40,
+      "not": {
+        "const": "change-me"
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version, e.g. 1.0.0"
+    },
+    "author": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "license": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "min_app": {
+      "type": "string",
+      "description": "Oldest Glyph version the plugin works with"
+    },
+    "kind": {
+      "enum": [
+        "theme",
+        "extension"
+      ]
+    },
     "theme": {
       "type": "object",
-      "required": ["accent"],
+      "required": [
+        "accent"
+      ],
       "properties": {
-        "accent": { "$ref": "#/$defs/colour" },
-        "glow": { "type": "array", "items": { "$ref": "#/$defs/colour" }, "minItems": 3, "maxItems": 3 },
-        "base": { "$ref": "#/$defs/colour", "description": "Near black: each channel at most #24" }
+        "accent": {
+          "$ref": "#/$defs/colour"
+        },
+        "glow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/colour"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "base": {
+          "$ref": "#/$defs/colour",
+          "description": "Near black: each channel at most #24"
+        }
+      },
+      "additionalProperties": false
+    },
+    "main": {
+      "type": "string",
+      "pattern": "\\.wasm$",
+      "description": "The plugin's WebAssembly module, path in the repo next to the manifest"
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "playback",
+          "library",
+          "search",
+          "settings",
+          "network",
+          "audio",
+          "lyrics_provider"
+        ]
+      }
+    },
+    "network": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Hosts the code may contact (needs the network permission)",
+      "items": {
+        "type": "string",
+        "pattern": "^(\\*\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+$"
+      }
+    },
+    "strings": {
+      "type": "object",
+      "description": "Texts by language: your own (keys starting with <id>.) and replacements for Glyph's",
+      "propertyNames": {
+        "pattern": "^[a-z]{2}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[A-Za-z0-9._-]{1,100}$"
+        },
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "hide": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Label keys of Glyph settings rows to hide",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._-]{1,100}$"
+      }
+    },
+    "settings": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "items"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/key"
+          },
+          "page": {
+            "enum": [
+              "own",
+              "playback",
+              "playback.content",
+              "playback.sources",
+              "audio",
+              "appearance",
+              "integrations",
+              "storage",
+              "system",
+              "about"
+            ]
+          },
+          "after": {
+            "type": "string",
+            "description": "Label key of the Glyph row this section follows"
+          },
+          "title": {
+            "$ref": "#/$defs/text"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 40,
+            "items": {
+              "$ref": "#/$defs/item"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "menus": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/key"
+          },
+          "label": {
+            "$ref": "#/$defs/text"
+          },
+          "menu": {
+            "enum": [
+              "song"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "theme"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "theme"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "extension"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "schema"
+        ],
+        "properties": {
+          "schema": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "settings"
+        ]
+      },
+      "then": {
+        "required": [
+          "main"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "menus"
+        ]
+      },
+      "then": {
+        "required": [
+          "main"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "colour": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]{1,40}$"
+    },
+    "text": {
+      "description": "A text, or the same text by language: {\"en\": \"...\", \"de\": \"...\"}",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z]{2}$"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/key"
+        },
+        "type": {
+          "enum": [
+            "toggle",
+            "slider",
+            "select",
+            "text",
+            "button",
+            "note",
+            "link",
+            "progress"
+          ]
+        },
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "desc": {
+          "$ref": "#/$defs/text"
+        },
+        "default": {},
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 8
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              "label": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "placeholder": {
+          "$ref": "#/$defs/text"
+        },
+        "caption": {
+          "$ref": "#/$defs/text"
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "Stored in secure storage; never returned to plugin code"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Secret must be set before code runs"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "credential": {
+          "type": "object",
+          "required": [
+            "host",
+            "path",
+            "location",
+            "name"
+          ],
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 200
+            },
+            "location": {
+              "enum": [
+                "query",
+                "headers"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,100}$"
+            }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     }
-  },
-  "if": { "properties": { "kind": { "const": "theme" } } },
-  "then": { "required": ["theme"] },
-  "$defs": {
-    "colour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
   }
 }

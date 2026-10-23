@@ -1,0 +1,61 @@
+{
+  "schema": 2,
+  "id": "glyph-lastfm-profile",
+  "name": "Last.fm Profile",
+  "version": "1.0.0",
+  "author": "glyphmusic",
+  "kind": "extension",
+  "main": "plugin.wasm",
+  "permissions": [
+    "network"
+  ],
+  "network": [
+    "ws.audioscrobbler.com"
+  ],
+  "description": "Example: read a Last.fm profile with your own API key. No Glyph server or shared service key.",
+  "settings": [
+    {
+      "id": "account",
+      "title": "Last.fm",
+      "items": [
+        {
+          "id": "api_key",
+          "type": "text",
+          "label": "Last.fm API key",
+          "secret": true,
+          "required": true,
+          "desc": "Use your own key from last.fm/api/account/create. Press Enter to save securely.",
+          "credential": {
+            "host": "ws.audioscrobbler.com",
+            "path": "/2.0/",
+            "location": "query",
+            "name": "api_key"
+          }
+        },
+        {
+          "id": "username",
+          "type": "text",
+          "label": "Last.fm user name"
+        },
+        {
+          "id": "lookup",
+          "type": "button",
+          "label": "Profile",
+          "caption": "Load profile"
+        },
+        {
+          "id": "result",
+          "type": "note",
+          "label": "Last.fm profile"
+        },
+        {
+          "id": "get_key",
+          "type": "link",
+          "label": "Create your own Last.fm API key",
+          "caption": "Last.fm",
+          "url": "https://www.last.fm/api/account/create"
+        }
+      ]
+    }
+  ]
+}

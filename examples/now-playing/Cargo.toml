@@ -1,0 +1,22 @@
+[package]
+name = "now-playing-toast"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+# A Glyph plugin is a WebAssembly library without WASI:
+#   rustup target add wasm32-unknown-unknown
+#   cargo build --release --target wasm32-unknown-unknown
+#   cp target/wasm32-unknown-unknown/release/now_playing_toast.wasm plugin.wasm
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde_json = "1"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"

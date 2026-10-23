@@ -1,0 +1,127 @@
+{
+  "$schema": "https://raw.githubusercontent.com/glyphmusic/plugins/main/schema/glyph-plugin.schema.json",
+  "schema": 2,
+  "id": "now-playing-toast",
+  "name": "Now Playing Toast",
+  "version": "1.0.0",
+  "author": "glyphmusic",
+  "description": "Shows the new song in a toast, adds \"More by this artist\" to the song menu. An example extension.",
+  "license": "MIT",
+  "kind": "extension",
+  "main": "plugin.wasm",
+  "permissions": [
+    "playback",
+    "search"
+  ],
+  "settings": [
+    {
+      "id": "main",
+      "title": {
+        "en": "Toasts",
+        "de": "Hinweise"
+      },
+      "items": [
+        {
+          "id": "enabled",
+          "type": "toggle",
+          "label": {
+            "en": "Show the new song",
+            "de": "Neuen Song anzeigen"
+          },
+          "desc": {
+            "en": "A short toast each time the song changes.",
+            "de": "Ein kurzer Hinweis bei jedem Songwechsel."
+          },
+          "default": true
+        },
+        {
+          "id": "format",
+          "type": "select",
+          "label": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "options": [
+            {
+              "value": "title",
+              "label": {
+                "en": "Title",
+                "de": "Titel"
+              }
+            },
+            {
+              "value": "both",
+              "label": {
+                "en": "Title and artist",
+                "de": "Titel und Künstler"
+              }
+            }
+          ],
+          "default": "both"
+        },
+        {
+          "id": "test",
+          "type": "button",
+          "label": {
+            "en": "Try it",
+            "de": "Ausprobieren"
+          },
+          "caption": {
+            "en": "Show a toast",
+            "de": "Hinweis zeigen"
+          }
+        },
+        {
+          "id": "count",
+          "type": "note",
+          "label": {
+            "en": "Songs so far",
+            "de": "Bisherige Songs"
+          },
+          "desc": {
+            "en": "Counts the songs this plugin announced.",
+            "de": "Zählt die Songs, die dieses Plugin angezeigt hat."
+          }
+        }
+      ]
+    },
+    {
+      "id": "quick",
+      "page": "playback.content",
+      "after": "sp.radio",
+      "title": {
+        "en": "Song toasts",
+        "de": "Song-Hinweise"
+      },
+      "items": [
+        {
+          "id": "quick_link",
+          "type": "link",
+          "label": {
+            "en": "How this plugin is made",
+            "de": "Wie dieses Plugin gebaut ist"
+          },
+          "caption": "GitHub",
+          "url": "https://github.com/glyphmusic/plugins/tree/main/examples/now-playing"
+        }
+      ]
+    }
+  ],
+  "menus": [
+    {
+      "id": "more",
+      "label": {
+        "en": "More by this artist",
+        "de": "Mehr von diesem Künstler"
+      }
+    }
+  ],
+  "strings": {
+    "en": {
+      "now-playing-toast.now": "Now playing"
+    },
+    "de": {
+      "now-playing-toast.now": "Jetzt läuft"
+    }
+  }
+}
