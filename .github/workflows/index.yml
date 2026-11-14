@@ -22,7 +22,7 @@ jobs:
         with:
           # Full history: `updated` of the themes in this repo comes from git log.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Check entries
