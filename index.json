@@ -4,7 +4,7 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/aurora",
-      "rev": "068fd8de9ceb06e487904da0b74f12cee8b49e2d",
+      "rev": "07a072021d292f2029efff140396c48936bbf02a",
       "manifest": {
         "schema": 1,
         "id": "aurora",
@@ -29,7 +29,7 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/citrus",
-      "rev": "068fd8de9ceb06e487904da0b74f12cee8b49e2d",
+      "rev": "07a072021d292f2029efff140396c48936bbf02a",
       "manifest": {
         "schema": 1,
         "id": "citrus",
@@ -54,7 +54,7 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/sakura",
-      "rev": "068fd8de9ceb06e487904da0b74f12cee8b49e2d",
+      "rev": "07a072021d292f2029efff140396c48936bbf02a",
       "manifest": {
         "schema": 1,
         "id": "sakura",
