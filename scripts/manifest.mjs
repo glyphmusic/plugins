@@ -22,6 +22,25 @@ export const ITEM_TYPES = ['toggle', 'slider', 'select', 'text', 'button', 'note
 export const PROTECTED_KEYS = ['plugins.', 'account.', 'mcp.'];
 /** Largest plugin code (.wasm). */
 export const MAX_CODE = 16 * 1024 * 1024;
+/** Fonts a look can pick (system fonts; a style sheet can bring its own). */
+export const FONTS = ['inter', 'system', 'rounded', 'serif', 'mono'];
+/** Background pictures per look, and the size of each. */
+export const MAX_LOOK_BACKGROUNDS = 8;
+export const MAX_LOOK_PICTURE = 8 * 1024 * 1024;
+/** Largest style sheet of a look. */
+export const MAX_CSS = 128 * 1024;
+/** Files the style sheet may use with url(), and the size of each. */
+export const MAX_LOOK_ASSETS = 40;
+export const MAX_LOOK_ASSET = 2 * 1024 * 1024;
+/** Icons a look may replace, and the size of each .svg. */
+export const MAX_LOOK_ICONS = 400;
+export const MAX_ICON = 32 * 1024;
+/** All files of one look together. */
+export const MAX_LOOK_TOTAL = 32 * 1024 * 1024;
+const ASSET_TYPES = ['woff2', 'woff', 'ttf', 'otf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'];
+/** What a look's style sheet may not use: things that load by themselves (url() is checked apart), old script hooks, escapes. */
+const CSS_BANNED = ['@import', '@namespace', '@charset', 'image-set(', 'image(', 'src(', 'element(',
+  'expression(', 'javascript:', '-moz-binding', 'behavior:', '\\', '<'];
 
 export const validId = id => typeof id === 'string' && id.length >= 2 && id.length <= 40
   && /^[a-z0-9-]+$/.test(id) && !id.startsWith('-') && !id.endsWith('-') && !id.includes('--');
@@ -68,12 +87,13 @@ export function validate(m) {
   if (typeof m.version !== 'string' || !semver.test(m.version)) err.push('version must be a semantic version like 1.0.0');
   if (m.min_app !== undefined && (typeof m.min_app !== 'string' || !semver.test(m.min_app))) err.push('min_app must be a semantic version like 0.7.0');
   if (m.theme !== undefined) err.push(...validateTheme(m.theme));
+  if (m.look !== undefined) err.push(...validateLook(m.look));
   if (!KINDS.includes(m.kind)) {
     err.push(`kind must be one of: ${KINDS.join(', ')} (got ${JSON.stringify(m.kind)})`);
   } else if (m.kind === 'theme') {
     if (m.theme === undefined) err.push('a theme plugin needs a "theme" object');
     if (['main', 'strings', 'hide', 'settings', 'menus', 'permissions', 'network'].some(f => m[f] !== undefined && !(Array.isArray(m[f]) && !m[f].length))) {
-      err.push('a theme has colours only; use "kind": "extension" for more');
+      err.push('a theme has colours and a look only; use "kind": "extension" for more');
     }
   } else {
     if (schema < 2) err.push('extensions need "schema": 2');
@@ -101,12 +121,144 @@ function validateTheme(t) {
   return err;
 }
 
+function validateLook(l) {
+  if (!isObj(l)) return ['"look" must be an object'];
+  const err = [];
+  const bgs = l.backgrounds ?? [], assets = l.assets ?? [], icons = l.icons ?? {};
+  if (l.font === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
+    && !(Array.isArray(assets) && assets.length) && !(isObj(icons) && Object.keys(icons).length)) {
+    err.push('look: needs a font, radius, backgrounds, css, assets or icons');
+  }
+  const ext = f => (f.split('.').pop() ?? '').toLowerCase();
+  if (l.font !== undefined && !FONTS.includes(l.font)) err.push(`look.font must be one of: ${FONTS.join(', ')}`);
+  if (l.radius !== undefined && !(typeof l.radius === 'number' && l.radius >= 0 && l.radius <= 2)) err.push('look.radius must be a number from 0 to 2');
+  if (!Array.isArray(bgs) || bgs.length > MAX_LOOK_BACKGROUNDS) err.push(`look.backgrounds takes up to ${MAX_LOOK_BACKGROUNDS} pictures`);
+  else for (const b of bgs) {
+    if (typeof b !== 'string' || !b || !validPath(b) || !['png', 'jpg', 'jpeg', 'webp'].includes(b.split('.').pop())) err.push(`look.backgrounds: "${b}" must be the path of a .png, .jpg or .webp file in the repo`);
+  }
+  if (l.css !== undefined && (typeof l.css !== 'string' || !validPath(l.css) || !l.css.endsWith('.css'))) err.push('look.css must be the path of a .css file in the repo');
+  if (!Array.isArray(assets) || assets.length > MAX_LOOK_ASSETS) err.push(`look.assets takes up to ${MAX_LOOK_ASSETS} files`);
+  else for (const a of assets) {
+    if (typeof a !== 'string' || !a || !validPath(a) || !ASSET_TYPES.includes(a.split('.').pop())) err.push(`look.assets: "${a}" must be the path of a font (.woff2, .woff, .ttf, .otf) or picture (.png, .jpg, .webp, .gif, .svg) in the repo`);
+  }
+  if (!isObj(icons) || Object.keys(icons).length > MAX_LOOK_ICONS) err.push(`look.icons takes up to ${MAX_LOOK_ICONS} icons`);
+  else for (const [name, file] of Object.entries(icons)) {
+    if (!/^[a-z0-9-]{1,40}$/.test(name)) err.push(`look.icons: "${name}" is not an icon name (a-z, 0-9 and -)`);
+    if (typeof file !== 'string' || !file || !validPath(file) || ext(file) !== 'svg') err.push(`look.icons.${name} must be the path of a .svg file in the repo`);
+  }
+  const jobs = [...(typeof l.css === 'string' ? [l.css] : []), ...(Array.isArray(bgs) ? bgs : []), ...(Array.isArray(assets) ? assets : [])];
+  if (new Set(jobs).size !== jobs.length) err.push('look: each file only once (css, backgrounds and assets)');
+  return err;
+}
+
+/** The files a manifest's look needs, each once. */
+export function lookFiles(m) {
+  const l = m?.look;
+  if (!isObj(l)) return [];
+  const all = [...(typeof l.css === 'string' ? [l.css] : []), ...(Array.isArray(l.backgrounds) ? l.backgrounds : []),
+    ...(Array.isArray(l.assets) ? l.assets : []), ...(isObj(l.icons) ? Object.values(l.icons) : [])];
+  return [...new Set(all.filter(f => typeof f === 'string'))].sort();
+}
+
+/** Largest size file `name` of look `l` may have, by what it is used for. */
+export function lookMaxSize(l, name) {
+  let max = 0;
+  if (l?.css === name) max = Math.max(max, MAX_CSS);
+  if ((l?.backgrounds ?? []).includes(name)) max = Math.max(max, MAX_LOOK_PICTURE);
+  if ((l?.assets ?? []).includes(name)) max = Math.max(max, MAX_LOOK_ASSET);
+  if (Object.values(l?.icons ?? {}).includes(name)) max = Math.max(max, MAX_ICON);
+  return max;
+}
+
+/** Where a style sheet uses url(...): [{start, end, addr}], or a problem as text. */
+export function cssUrls(css) {
+  const low = css.toLowerCase();
+  const out = [];
+  let from = 0;
+  for (;;) {
+    const start = low.indexOf('url(', from);
+    if (start < 0) return out;
+    let i = start + 4;
+    while (i < css.length && /\s/.test(css[i])) i++;
+    let addr;
+    if (css[i] === '"' || css[i] === "'") {
+      const end = css.indexOf(css[i], i + 1);
+      if (end < 0) return 'the style sheet has an unclosed url(';
+      addr = css.slice(i + 1, end).trim();
+      i = end + 1;
+    } else {
+      const end = css.indexOf(')', i);
+      if (end < 0) return 'the style sheet has an unclosed url(';
+      addr = css.slice(i, end).trim();
+      i = end;
+    }
+    while (i < css.length && /\s/.test(css[i])) i++;
+    if (css[i] !== ')') return 'the style sheet has an unclosed url(';
+    out.push({start, end: i + 1, addr});
+    from = i + 1;
+  }
+}
+
+/** Problem with a look's style sheet, or null: small, url() only for `assets`, nothing else that loads, braces balanced. */
+export function checkCss(css, assets = []) {
+  if (new TextEncoder().encode(css).length > MAX_CSS) return `the style sheet is larger than ${MAX_CSS / 1024} KB`;
+  const low = css.toLowerCase();
+  const banned = CSS_BANNED.find(b => low.includes(b));
+  if (banned) return `the style sheet may not use ${banned}`;
+  const urls = cssUrls(css);
+  if (typeof urls === 'string') return urls;
+  const stray = urls.find(u => !assets.includes(u.addr));
+  if (stray) return `url(${stray.addr}) must be one of the look's assets`;
+  let depth = 0;
+  for (let i = 0; i < css.length;) {
+    const c = css[i];
+    if (c === '/' && css[i + 1] === '*') {
+      const end = css.indexOf('*/', i + 2);
+      if (end < 0) return 'the style sheet has an unclosed comment';
+      i = end + 2;
+    } else if (c === '"' || c === "'") {
+      const end = css.indexOf(c, i + 1);
+      if (end < 0 || css.slice(i + 1, end).includes('\n')) return 'the style sheet has an unclosed string';
+      i = end + 1;
+    } else {
+      if (c === '{') depth++;
+      else if (c === '}' && --depth < 0) return 'the style sheet has a } without a {';
+      i++;
+    }
+  }
+  return depth ? 'the style sheet has a { without a }' : null;
+}
+
+/** Problem with file `name` of look `l`, or null. */
+export function checkLookFile(l, name, bytes) {
+  const max = lookMaxSize(l, name);
+  if (bytes.length > max) return `${name}: at most ${Math.floor(max / 1024)} KB`;
+  const ext = (name.split('.').pop() ?? '').toLowerCase();
+  const b = bytes;
+  const starts = sig => sig.every((x, i) => b[i] === (typeof x === 'string' ? x.charCodeAt(0) : x));
+  const text = () => { try { return new TextDecoder('utf-8', {fatal: true}).decode(bytes); } catch { return null; } };
+  if (ext === 'css') {
+    const css = text();
+    if (css === null) return `${name}: the style sheet is not UTF-8 text`;
+    const p = checkCss(css, l?.assets ?? []);
+    return p && `${name}: ${p}`;
+  }
+  const ok = {
+    png: () => starts([0x89, 'P', 'N', 'G']), jpg: () => starts([0xff, 0xd8, 0xff]), jpeg: () => starts([0xff, 0xd8, 0xff]),
+    webp: () => starts(['R', 'I', 'F', 'F']) && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+    gif: () => starts(['G', 'I', 'F', '8']), svg: () => (text() ?? '').includes('<svg'),
+    woff2: () => starts(['w', 'O', 'F', '2']), woff: () => starts(['w', 'O', 'F', 'F']),
+    ttf: () => starts([0, 1, 0, 0]) || starts(['t', 'r', 'u', 'e']), otf: () => starts(['O', 'T', 'T', 'O']),
+  }[ext];
+  return ok?.() ? null : `${name}: not a ${ext} file`;
+}
+
 function validateExtension(m) {
   const err = [];
   const perms = m.permissions ?? [], network = m.network ?? [], strings = m.strings ?? {}, hide = m.hide ?? [];
   const settings = m.settings ?? [], menus = m.menus ?? [];
-  if (m.theme === undefined && m.main === undefined && !Object.keys(strings).length && !hide.length) {
-    err.push('an extension needs code ("main"), "strings", "hide" or a "theme"');
+  if (m.theme === undefined && m.look === undefined && m.main === undefined && !Object.keys(strings).length && !hide.length) {
+    err.push('an extension needs code ("main"), "strings", "hide", a "theme" or a "look"');
   }
   if (m.main !== undefined) {
     if (typeof m.main !== 'string' || !m.main || !validPath(m.main) || !m.main.endsWith('.wasm')) err.push('main must be the path of a .wasm file in the repo');

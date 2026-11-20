@@ -17,7 +17,7 @@
 
 import {readFileSync, existsSync} from 'node:fs';
 import {dirname, join} from 'node:path';
-import {MANIFEST, validate, hexValue, checkCode} from './manifest.mjs';
+import {MANIFEST, validate, hexValue, checkCode, checkLookFile, lookFiles} from './manifest.mjs';
 
 const files = process.argv.slice(2);
 if (!files.length) files.push(MANIFEST);
@@ -58,6 +58,17 @@ for (const file of files) {
       if (p) problems.push(`main: ${p}`);
     }
   }
+  // The look's files next to a local manifest.
+  if (!problems.length && manifest.look && !/^https?:\/\//.test(file)) {
+    for (const name of lookFiles(manifest)) {
+      const at = join(dirname(file), name);
+      if (!existsSync(at)) problems.push(`look: ${at} does not exist`);
+      else {
+        const p = checkLookFile(manifest.look, name, readFileSync(at));
+        if (p) problems.push(`look: ${p}`);
+      }
+    }
+  }
   if (problems.length) {
     console.log(`✗ ${file}`);
     for (const p of problems) console.log(`  - ${p}`);
@@ -71,6 +82,15 @@ for (const file of files) {
     if (t.glow) console.log(`  glow    ${t.glow.map(swatch).join('  ')}`);
     else console.log('  glow    (none: each view uses its own colours)');
     console.log(`  base    ${t.base ? swatch(t.base) : '(default #030303)'}`);
+  }
+  if (manifest.look) {
+    const l = manifest.look;
+    if (l.font) console.log(`  font    ${l.font}`);
+    if (l.radius !== undefined) console.log(`  corners ${Math.round(l.radius * 100)}%`);
+    if (l.backgrounds?.length) console.log(`  pictures ${l.backgrounds.join(', ')}`);
+    if (l.css) console.log(`  css     ${l.css}`);
+    if (l.assets?.length) console.log(`  assets  ${l.assets.join(', ')}`);
+    if (l.icons && Object.keys(l.icons).length) console.log(`  icons   ${Object.keys(l.icons).join(', ')}`);
   }
   if (manifest.kind === 'extension') {
     const list = (label, items) => items?.length && console.log(`  ${label.padEnd(12)}${items.join(', ')}`);

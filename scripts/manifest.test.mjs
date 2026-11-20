@@ -1,7 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validate, PERMISSIONS, ITEM_TYPES} from './manifest.mjs';
+import {validate, checkCss, checkLookFile, PERMISSIONS, ITEM_TYPES} from './manifest.mjs';
+
+test('looks: themes and extensions may bring font, corners, pictures and a style sheet', () => {
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension', look: {font: 'serif', radius: 1.5, css: 'style.css', backgrounds: ['bg/a.webp']}};
+  assert.deepEqual(validate(ext), []);
+  const theme = {id: 'dusk', name: 'Dusk', version: '1.0.0', kind: 'theme', theme: {accent: '#ff8a3d'}, look: {font: 'rounded'}};
+  assert.deepEqual(validate(theme), []);
+  assert.deepEqual(validate({...ext, look: {assets: ['fonts/a.woff2', 'img/b.svg'], icons: {heart: 'icons/heart.svg', 'heart-fill': 'icons/heart.svg'}}}), []);
+  for (const look of [{}, {font: 'comic'}, {radius: 3}, {css: 'x.js'}, {backgrounds: ['../x.png']}, {backgrounds: ['x.gif']}, {css: 'a.css', backgrounds: ['a.css']},
+    {assets: ['x.exe']}, {icons: {Heart: 'h.svg'}}, {icons: {heart: 'h.png'}}]) {
+    assert.ok(validate({...ext, look}).length, JSON.stringify(look));
+  }
+});
+
+test('looks: the style sheet only loads its own files and stays balanced', () => {
+  assert.equal(checkCss('[data-part="sidebar"] { opacity: .8 } /* } */ .a::after { content: "}" }'), null);
+  assert.equal(checkCss('@media (max-width: 900px) { .a { color: red } }'), null);
+  const assets = ['img/a.png', 'fonts/x.woff2'];
+  assert.equal(checkCss('.a { background: url(img/a.png) }', assets), null);
+  assert.equal(checkCss('@font-face { font-family: X; src: url( "fonts/x.woff2" ) format("woff2") }', assets), null);
+  for (const bad of ['} * { display: none }', '.a { color: red', '.a { background: URL(x) }', "@import 'x.css';",
+    '.a { background: url(img/b.png) }', ".a { background: url('https://x.example/a.png') }", '.a { background: url(img/a.png }',
+    String.raw`.a { content: '\75 rl(' }`, '.a { content: "unclosed }', '/* open', '</style>', 'a{}'.repeat(50000)]) {
+    assert.ok(checkCss(bad, assets), bad.slice(0, 40));
+  }
+  const look = {css: 's.css', backgrounds: ['a.png'], assets: ['f.woff2'], icons: {heart: 'h.svg'}};
+  assert.equal(checkLookFile(look, 'a.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10])), null);
+  assert.ok(checkLookFile(look, 'a.png', new TextEncoder().encode('GIF89a')));
+  assert.equal(checkLookFile(look, 'f.woff2', new TextEncoder().encode('wOF2....')), null);
+  assert.equal(checkLookFile(look, 'h.svg', new TextEncoder().encode('<svg/>')), null);
+  assert.ok(checkLookFile(look, 'h.svg', new TextEncoder().encode('<svg>' + 'x'.repeat(40000))));
+  assert.ok(checkLookFile(look, 's.css', new TextEncoder().encode('} body { display: none }')));
+});
 
 const example = () => JSON.parse(readFileSync(new URL('../examples/glyph-lastfm-profile/glyph-plugin.json', import.meta.url), 'utf8'));
 

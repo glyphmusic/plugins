@@ -210,6 +210,66 @@
         },
         "additionalProperties": false
       }
+    },
+    "look": {
+      "description": "Font, corners, background pictures, icons and a style sheet for the whole interface. Pure data; allowed in themes and extensions.",
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "font": {
+          "enum": [
+            "inter",
+            "system",
+            "rounded",
+            "serif",
+            "mono"
+          ]
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Corner roundness: 0 square, 1 Glyph's, 2 very round."
+        },
+        "backgrounds": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_./-]+\\.(png|jpe?g|webp)$"
+          },
+          "description": "Pictures (.png, .jpg, .webp) offered in Settings › Appearance › Background picture."
+        },
+        "css": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./-]+\\.css$",
+          "description": "Style sheet for the whole interface. url() only for files in assets; no @import, image-set(), backslashes or <; at most 128 KB."
+        },
+        "assets": {
+          "type": "array",
+          "maxItems": 40,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_./-]+\\.(woff2|woff|ttf|otf|png|jpe?g|webp|gif|svg)$"
+          },
+          "description": "Files the style sheet may use with url(): fonts and pictures, at most 2 MB each."
+        },
+        "icons": {
+          "type": "object",
+          "maxProperties": 400,
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]{1,40}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_./-]+\\.svg$"
+          },
+          "description": "Glyph icons to replace: icon name -> .svg file (at most 32 KB), drawn in the text colour."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [

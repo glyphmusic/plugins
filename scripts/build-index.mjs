@@ -20,7 +20,7 @@
 import {readFileSync, writeFileSync, readdirSync, existsSync} from 'node:fs';
 import {execSync} from 'node:child_process';
 
-import {MANIFEST, MAX_CODE, checkCode, validate, validRepo, validPath} from './manifest.mjs';
+import {MANIFEST, MAX_CODE, MAX_LOOK_TOTAL, checkCode, checkLookFile, lookFiles, lookMaxSize, validate, validRepo, validPath} from './manifest.mjs';
 
 /** Format of index.json itself (not of the manifests inside). */
 const INDEX_FORMAT = 1;
@@ -71,6 +71,33 @@ async function codeProblem(entry, rev, main) {
   return checkCode(bytes);
 }
 
+/** Problems with the files of the plugin's look (style sheet, pictures, fonts, icons) at `rev`. */
+async function lookProblems(entry, rev, manifest) {
+  const out = [];
+  let total = 0;
+  for (const name of lookFiles(manifest)) {
+    const file = entry.path ? `${entry.path}/${name}` : name;
+    const max = lookMaxSize(manifest.look, name);
+    let bytes;
+    if (entry.repo === SELF && entry.rev === 'self') {
+      const local = new URL(file, root);
+      if (!existsSync(local)) { out.push(`${file} (look) does not exist in this repo`); continue; }
+      bytes = readFileSync(local);
+    } else {
+      const url = `https://raw.githubusercontent.com/${entry.repo}/${rev}/${file}`;
+      const r = await fetch(url, {headers: {'user-agent': 'glyph-plugins-index'}});
+      if (!r.ok) { out.push(`${url} (look): HTTP ${r.status}`); continue; }
+      if (Number(r.headers.get('content-length') ?? 0) > max) { out.push(`${file} (look) is too large`); continue; }
+      bytes = new Uint8Array(await r.arrayBuffer());
+    }
+    total += bytes.length;
+    const p = checkLookFile(manifest.look, name, bytes);
+    if (p) out.push(p);
+  }
+  if (total > MAX_LOOK_TOTAL) out.push(`the look's files are larger than ${MAX_LOOK_TOTAL / 1024 / 1024} MB together`);
+  return out;
+}
+
 async function manifestOf(entry, rev) {
   const file = entry.path ? `${entry.path}/${MANIFEST}` : MANIFEST;
   if (entry.repo === SELF && entry.rev === 'self') {
@@ -116,6 +143,7 @@ for (const f of files) {
     const p = await codeProblem(entry, rev, manifest.main);
     if (p) errs.push(p);
   }
+  if (!errs.length && manifest.look) errs.push(...await lookProblems(entry, rev, manifest));
   if (errs.length) { problems.push(...errs.map(e => `${where}: ${e}`)); continue; }
   ids.add(manifest.id);
   const out = {repo: entry.repo, path: entry.path, rev, manifest};
