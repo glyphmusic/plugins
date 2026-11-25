@@ -279,6 +279,21 @@
           },
           "description": "Phone tabs to put first (order) or hide: home, search, library. At least one tab always stays."
         },
+        "sidebar_position": {
+          "enum": ["left", "right"],
+          "description": "Where the sidebar sits on computers. right: the side panel (queue, lyrics) opens on the left."
+        },
+        "splash": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["art"],
+          "properties": {
+            "art": { "type": "array", "minItems": 1, "maxItems": 40, "items": { "type": "string", "maxLength": 60, "pattern": "^[ -~]*$" }, "description": "Rows of ASCII characters the startup animation assembles." },
+            "tint": { "type": "array", "maxItems": 40, "items": { "type": "string", "maxLength": 60, "pattern": "^[ -~]*$" }, "description": "Same shape as art: p draws that character in the accent colour." },
+            "speed": { "type": "number", "minimum": 0.5, "maximum": 2, "description": "0.5 slow, 1 Glyph's, 2 fast." }
+          },
+          "description": "Own startup animation, shown from the next start."
+        },
         "app_icon": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_./-]+\\.png$",

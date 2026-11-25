@@ -2,14 +2,42 @@
   "schema": 1,
   "id": "citrus",
   "name": "Citrus",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "glyphmusic",
-  "description": "Lime and lemon on black.",
+  "description": "Lime and lemon on black, with citrus-slice hearts, its own app icon and startup animation.",
   "license": "MIT",
+  "min_app": "0.12.11",
   "kind": "theme",
   "theme": {
     "accent": "#d4f54a",
     "glow": ["#1a2204", "#7fae12", "#f3f57a"],
     "base": "#030402"
+  },
+  "look": {
+    "icons": {
+      "heart": "icons/heart.svg",
+      "heart-fill": "icons/heart-fill.svg"
+    },
+    "app_icon": "app-icon.png",
+    "splash": {
+      "art": [
+        "       .-''''-.       ",
+        "     .'\\  |   /'.     ",
+        "    /   \\ |  /   \\    ",
+        "   |-----(@)------|   ",
+        "    \\   / |  \\   /    ",
+        "     './  |   \\.'     ",
+        "       '-....-'       "
+      ],
+      "tint": [
+        "       wwwwwwww       ",
+        "     wwppwwwwwppww     ",
+        "    wwwwpwwwwpwwwww    ",
+        "   wppppppppppppppw   ",
+        "    wwwwpwwwwpwwwww    ",
+        "     wwpwwwwwwpww     ",
+        "       wwwwwwww       "
+      ]
+    }
   }
 }
