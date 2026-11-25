@@ -2,14 +2,46 @@
   "schema": 1,
   "id": "aurora",
   "name": "Aurora",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "glyphmusic",
-  "description": "Teal light over a violet night sky.",
+  "description": "Teal light over a violet night sky, with star hearts, its own app icon and startup animation.",
   "license": "MIT",
+  "min_app": "0.12.11",
   "kind": "theme",
   "theme": {
     "accent": "#3ee6c1",
     "glow": ["#0b0a3a", "#1f8f9e", "#7cf5c8"],
     "base": "#020406"
+  },
+  "look": {
+    "icons": {
+      "heart": "icons/heart.svg",
+      "heart-fill": "icons/heart-fill.svg"
+    },
+    "app_icon": "app-icon.png",
+    "splash": {
+      "art": [
+        "   .      *       .       *  ",
+        "        ~~~~~~~~~~~~~~        ",
+        "   ~~~~~~~~~~~~~~~~~~~~~~~~   ",
+        " ~~~~~~      ~~~~~~      ~~~~ ",
+        "      *    ~~~~~~~~~~  .      ",
+        "   ~~~~~~~~~~~~~~~~~~~~~~~~   ",
+        "    /\\      /\\/\\       /\\     ",
+        "   /  \\/\\  /    \\/\\_  /  \\__  ",
+        "__/      \\/          \\/      \\"
+      ],
+      "tint": [
+        "   w      w       w       w  ",
+        "        pppppppppppppp        ",
+        "   pppppppppppppppppppppppp   ",
+        " pppppp      pppppp      pppp ",
+        "      w    pppppppppp  w      ",
+        "   pppppppppppppppppppppppp   ",
+        "    ww      wwww       ww     ",
+        "   wwwwwww  wwwwwwww  wwwww  ",
+        "wwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+      ]
+    }
   }
 }

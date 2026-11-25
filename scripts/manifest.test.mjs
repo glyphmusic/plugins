@@ -70,6 +70,15 @@ test('looks: order and hide parts of the home page, sidebar and tabs', () => {
   }
 });
 
+test('looks: sidebar position and startup animation', () => {
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  assert.deepEqual(validate({...ext, look: {sidebar_position: 'right', splash: {art: [' /\\ ', '(**)'], tint: ['    ', 'pppp'], speed: 1.5}}}), []);
+  for (const bad of [{sidebar_position: 'top'}, {splash: {art: []}}, {splash: {art: ['   ']}}, {splash: {art: ['ä']}},
+    {splash: {art: ['ab'], tint: ['pp', 'pp']}}, {splash: {art: ['ab'], speed: 5}}, {splash: {pic: ['ab']}}]) {
+    assert.ok(validate({...ext, look: bad}).length, JSON.stringify(bad));
+  }
+});
+
 const example = () => JSON.parse(readFileSync(new URL('../examples/glyph-lastfm-profile/glyph-plugin.json', import.meta.url), 'utf8'));
 
 test('own-key Last.fm setup is accepted without requiring a built Wasm artifact', () => {

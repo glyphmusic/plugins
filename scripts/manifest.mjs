@@ -36,6 +36,10 @@ export const LAYOUT_AREAS = {
   tabs: ['home', 'search', 'library'],
 };
 export const MAX_LAYOUT_PARTS = 30;
+/** Where a look can put the sidebar. */
+export const SIDEBAR_POSITIONS = ['left', 'right'];
+/** Largest startup animation picture: rows, characters per row. */
+export const MAX_SPLASH_ROWS = 40, MAX_SPLASH_COLS = 60;
 /** Whether a look's `font` / `mono` names a font file. */
 export const isFontFile = f => typeof f === 'string' && FONT_FILES.includes((f.split('.').pop() ?? '').toLowerCase()) && f.includes('.');
 /** Background pictures per look, and the size of each. */
@@ -139,9 +143,19 @@ function validateLook(l) {
   if (!isObj(l)) return ['"look" must be an object'];
   const err = [];
   const bgs = l.backgrounds ?? [], assets = l.assets ?? [], icons = l.icons ?? {};
-  if (l.font === undefined && l.mono === undefined && l.app_icon === undefined && l.home === undefined && l.sidebar === undefined && l.tabs === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
+  if (l.font === undefined && l.mono === undefined && l.app_icon === undefined && l.home === undefined && l.sidebar === undefined && l.tabs === undefined && l.sidebar_position === undefined && l.splash === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
     && !(Array.isArray(assets) && assets.length) && !(isObj(icons) && Object.keys(icons).length)) {
-    err.push('look: needs a font, mono, app_icon, radius, backgrounds, css, assets, icons, home, sidebar or tabs');
+    err.push('look: needs a font, mono, app_icon, radius, backgrounds, css, assets, icons, home, sidebar, tabs, sidebar_position or splash');
+  }
+  if (l.sidebar_position !== undefined && !SIDEBAR_POSITIONS.includes(l.sidebar_position)) err.push('look.sidebar_position must be "left" or "right"');
+  if (l.splash !== undefined) {
+    const s = l.splash;
+    const row = r => typeof r === 'string' && r.length <= MAX_SPLASH_COLS && /^[\x20-\x7e]*$/.test(r);
+    if (!isObj(s) || Object.keys(s).some(k => !['art', 'tint', 'speed'].includes(k))) err.push('look.splash must be an object with "art", "tint" and "speed"');
+    else if (!Array.isArray(s.art) || !s.art.length || s.art.length > MAX_SPLASH_ROWS || !s.art.every(row)) err.push(`look.splash.art takes 1 to ${MAX_SPLASH_ROWS} rows of at most ${MAX_SPLASH_COLS} printable ASCII characters`);
+    else if (!s.art.some(r => r.trim())) err.push('look.splash.art needs at least one character');
+    else if (s.tint !== undefined && (!Array.isArray(s.tint) || s.tint.length !== s.art.length || !s.tint.every(row))) err.push('look.splash.tint has one row per row of look.splash.art');
+    else if (s.speed !== undefined && !(typeof s.speed === 'number' && s.speed >= 0.5 && s.speed <= 2)) err.push('look.splash.speed must be a number from 0.5 to 2');
   }
   for (const area of Object.keys(LAYOUT_AREAS)) {
     const spec = l[area];
