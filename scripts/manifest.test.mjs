@@ -4,9 +4,9 @@ import {readFileSync} from 'node:fs';
 import {validate, checkCss, checkLookFile, lookFiles, PERMISSIONS, ITEM_TYPES} from './manifest.mjs';
 
 test('looks: themes and extensions may bring font, corners, pictures and a style sheet', () => {
-  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension', look: {font: 'serif', radius: 1.5, css: 'style.css', backgrounds: ['bg/a.webp']}};
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', min_app: '0.13.6', kind: 'extension', look: {font: 'serif', radius: 1.5, css: 'style.css', backgrounds: ['bg/a.webp']}};
   assert.deepEqual(validate(ext), []);
-  const theme = {id: 'dusk', name: 'Dusk', version: '1.0.0', kind: 'theme', theme: {accent: '#ff8a3d'}, look: {font: 'rounded'}};
+  const theme = {id: 'dusk', name: 'Dusk', version: '1.0.0', min_app: '0.13.6', kind: 'theme', theme: {accent: '#ff8a3d'}, look: {font: 'rounded'}};
   assert.deepEqual(validate(theme), []);
   assert.deepEqual(validate({...ext, look: {assets: ['fonts/a.woff2', 'img/b.svg'], icons: {heart: 'icons/heart.svg', 'heart-fill': 'icons/heart.svg'}}}), []);
   for (const look of [{}, {font: 'comic'}, {radius: 3}, {css: 'x.js'}, {backgrounds: ['../x.png']}, {backgrounds: ['x.gif']}, {css: 'a.css', backgrounds: ['a.css']},
@@ -36,7 +36,7 @@ test('looks: the style sheet only loads its own files and stays balanced', () =>
 });
 
 test('looks: own font files, monospaced font and app icon', () => {
-  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', min_app: '0.13.6', kind: 'extension'};
   const look = {font: 'fonts/Literata.woff2', mono: 'fonts/Code.ttf', app_icon: 'icon.png'};
   assert.deepEqual(validate({...ext, look}), []);
   assert.deepEqual(lookFiles({look}), ['fonts/Code.ttf', 'fonts/Literata.woff2', 'icon.png']);
@@ -62,7 +62,7 @@ test('looks: own font files, monospaced font and app icon', () => {
 });
 
 test('looks: order and hide parts of the home page, sidebar and tabs', () => {
-  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', min_app: '0.13.6', kind: 'extension'};
   assert.deepEqual(validate({...ext, look: {home: {order: ['mixes', 'recent'], hide: ['trending']}, sidebar: {hide: ['now_playing']}, tabs: {order: ['library']}}}), []);
   assert.deepEqual(validate({...ext, look: {home: {hide: ['from-the-future']}}}), []);
   for (const bad of [{home: []}, {home: {hide: ['Recent']}}, {sidebar: {order: ['home', 'home']}}, {tabs: {show: ['home']}}]) {
@@ -71,7 +71,7 @@ test('looks: order and hide parts of the home page, sidebar and tabs', () => {
 });
 
 test('looks: sidebar position and startup animation', () => {
-  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', min_app: '0.13.6', kind: 'extension'};
   assert.deepEqual(validate({...ext, look: {sidebar_position: 'right', splash: {art: [' /\\ ', '(**)'], tint: ['    ', 'pppp'], speed: 1.5}}}), []);
   for (const bad of [{sidebar_position: 'top'}, {splash: {art: []}}, {splash: {art: ['   ']}}, {splash: {art: ['ä']}},
     {splash: {art: ['ab'], tint: ['pp', 'pp']}}, {splash: {art: ['ab'], speed: 5}}, {splash: {pic: ['ab']}}]) {
@@ -149,4 +149,14 @@ test('max_app: a version or a whole minor line, not below min_app; changes stay 
   assert.deepEqual(validate({...base, changes: 'Fixes the glow.'}), []);
   assert.ok(validate({...base, changes: 'x'.repeat(301)}).length);
   assert.ok(validate({...base, changes: 5}).length);
+});
+
+test('a look needs a min_app that knows its parts', () => {
+  const base = {id: 'dusk', name: 'Dusk', version: '1.0.0', kind: 'theme', theme: {accent: '#ff8a3d'}};
+  assert.ok(validate({...base, look: {radius: 1.2}}).some(e => e.includes('needs Glyph 0.12.11')));
+  assert.deepEqual(validate({...base, min_app: '0.12.11', look: {radius: 1.2}}), []);
+  assert.ok(validate({...base, min_app: '0.12.11', look: {app_icon: 'icon.png'}}).some(e => e.includes('look.app_icon needs Glyph 0.13.6')));
+  assert.ok(validate({...base, min_app: '0.13.5', look: {splash: {art: ['ab']}}}).some(e => e.includes('look.splash')));
+  assert.deepEqual(validate({...base, min_app: '0.13.6', look: {app_icon: 'icon.png', splash: {art: ['ab']}}}), []);
+  assert.deepEqual(validate({...base, min_app: '1.0.0', look: {app_icon: 'icon.png'}}), []);
 });
