@@ -212,18 +212,50 @@
       }
     },
     "look": {
-      "description": "Font, corners, background pictures, icons and a style sheet for the whole interface. Pure data; allowed in themes and extensions.",
+      "description": "Font, corners, background pictures, icons, the app icon and a style sheet for the whole interface. Pure data; allowed in themes and extensions.",
       "type": "object",
       "minProperties": 1,
       "properties": {
         "font": {
-          "enum": [
-            "inter",
-            "system",
-            "rounded",
-            "serif",
-            "mono"
+          "description": "Text font everywhere: one of Glyph's fonts, or the path of a font file in the repo (at most 2 MB).",
+          "anyOf": [
+            {
+              "enum": [
+                "inter",
+                "system",
+                "rounded",
+                "serif",
+                "mono"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_./-]+\\.(woff2|woff|ttf|otf)$"
+            }
           ]
+        },
+        "mono": {
+          "description": "Monospaced font (numbers, ASCII art): like font.",
+          "anyOf": [
+            {
+              "enum": [
+                "inter",
+                "system",
+                "rounded",
+                "serif",
+                "mono"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_./-]+\\.(woff2|woff|ttf|otf)$"
+            }
+          ]
+        },
+        "app_icon": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./-]+\\.png$",
+          "description": "App icon for the window, taskbar, tray, Dock and Android's app overview: a square .png, 64 to 1024 pixels, at most 1 MB."
         },
         "radius": {
           "type": "number",

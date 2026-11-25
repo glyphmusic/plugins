@@ -22,8 +22,15 @@ export const ITEM_TYPES = ['toggle', 'slider', 'select', 'text', 'button', 'note
 export const PROTECTED_KEYS = ['plugins.', 'account.', 'mcp.'];
 /** Largest plugin code (.wasm). */
 export const MAX_CODE = 16 * 1024 * 1024;
-/** Fonts a look can pick (system fonts; a style sheet can bring its own). */
+/** Fonts a look can pick (system fonts); `font` and `mono` can also be a font file in the repo. */
 export const FONTS = ['inter', 'system', 'rounded', 'serif', 'mono'];
+/** Font files a look can use as `font` / `mono`. */
+export const FONT_FILES = ['woff2', 'woff', 'ttf', 'otf'];
+/** The app icon: a square .png, at most this big, sides in pixels. */
+export const MAX_APP_ICON = 1024 * 1024;
+export const APP_ICON_MIN = 64, APP_ICON_MAX = 1024;
+/** Whether a look's `font` / `mono` names a font file. */
+export const isFontFile = f => typeof f === 'string' && FONT_FILES.includes((f.split('.').pop() ?? '').toLowerCase()) && f.includes('.');
 /** Background pictures per look, and the size of each. */
 export const MAX_LOOK_BACKGROUNDS = 8;
 export const MAX_LOOK_PICTURE = 8 * 1024 * 1024;
@@ -125,12 +132,20 @@ function validateLook(l) {
   if (!isObj(l)) return ['"look" must be an object'];
   const err = [];
   const bgs = l.backgrounds ?? [], assets = l.assets ?? [], icons = l.icons ?? {};
-  if (l.font === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
+  if (l.font === undefined && l.mono === undefined && l.app_icon === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
     && !(Array.isArray(assets) && assets.length) && !(isObj(icons) && Object.keys(icons).length)) {
-    err.push('look: needs a font, radius, backgrounds, css, assets or icons');
+    err.push('look: needs a font, mono, app_icon, radius, backgrounds, css, assets or icons');
   }
   const ext = f => (f.split('.').pop() ?? '').toLowerCase();
-  if (l.font !== undefined && !FONTS.includes(l.font)) err.push(`look.font must be one of: ${FONTS.join(', ')}`);
+  for (const key of ['font', 'mono']) {
+    const f = l[key];
+    if (f !== undefined && !FONTS.includes(f) && !(isFontFile(f) && validPath(f))) {
+      err.push(`look.${key} must be one of: ${FONTS.join(', ')}, or the path of a .woff2, .woff, .ttf or .otf file in the repo`);
+    }
+  }
+  if (l.app_icon !== undefined && (typeof l.app_icon !== 'string' || !l.app_icon || !validPath(l.app_icon) || ext(l.app_icon) !== 'png')) {
+    err.push('look.app_icon must be the path of a .png file in the repo');
+  }
   if (l.radius !== undefined && !(typeof l.radius === 'number' && l.radius >= 0 && l.radius <= 2)) err.push('look.radius must be a number from 0 to 2');
   if (!Array.isArray(bgs) || bgs.length > MAX_LOOK_BACKGROUNDS) err.push(`look.backgrounds takes up to ${MAX_LOOK_BACKGROUNDS} pictures`);
   else for (const b of bgs) {
@@ -146,8 +161,10 @@ function validateLook(l) {
     if (!/^[a-z0-9-]{1,40}$/.test(name)) err.push(`look.icons: "${name}" is not an icon name (a-z, 0-9 and -)`);
     if (typeof file !== 'string' || !file || !validPath(file) || ext(file) !== 'svg') err.push(`look.icons.${name} must be the path of a .svg file in the repo`);
   }
-  const jobs = [...(typeof l.css === 'string' ? [l.css] : []), ...(Array.isArray(bgs) ? bgs : []), ...(Array.isArray(assets) ? assets : [])];
-  if (new Set(jobs).size !== jobs.length) err.push('look: each file only once (css, backgrounds and assets)');
+  const fonts = [...new Set([l.font, l.mono].filter(isFontFile))];
+  const jobs = [...(typeof l.css === 'string' ? [l.css] : []), ...(Array.isArray(bgs) ? bgs : []), ...(Array.isArray(assets) ? assets : []),
+    ...fonts, ...(typeof l.app_icon === 'string' ? [l.app_icon] : [])];
+  if (new Set(jobs).size !== jobs.length) err.push('look: each file only once (css, backgrounds, assets, font files and app_icon)');
   return err;
 }
 
@@ -156,7 +173,8 @@ export function lookFiles(m) {
   const l = m?.look;
   if (!isObj(l)) return [];
   const all = [...(typeof l.css === 'string' ? [l.css] : []), ...(Array.isArray(l.backgrounds) ? l.backgrounds : []),
-    ...(Array.isArray(l.assets) ? l.assets : []), ...(isObj(l.icons) ? Object.values(l.icons) : [])];
+    ...(Array.isArray(l.assets) ? l.assets : []), ...(isObj(l.icons) ? Object.values(l.icons) : []),
+    ...[l.font, l.mono].filter(isFontFile), ...(typeof l.app_icon === 'string' ? [l.app_icon] : [])];
   return [...new Set(all.filter(f => typeof f === 'string'))].sort();
 }
 
@@ -167,6 +185,8 @@ export function lookMaxSize(l, name) {
   if ((l?.backgrounds ?? []).includes(name)) max = Math.max(max, MAX_LOOK_PICTURE);
   if ((l?.assets ?? []).includes(name)) max = Math.max(max, MAX_LOOK_ASSET);
   if (Object.values(l?.icons ?? {}).includes(name)) max = Math.max(max, MAX_ICON);
+  if ([l?.font, l?.mono].filter(isFontFile).includes(name)) max = Math.max(max, MAX_LOOK_ASSET);
+  if (l?.app_icon === name) max = Math.max(max, MAX_APP_ICON);
   return max;
 }
 
@@ -242,6 +262,13 @@ export function checkLookFile(l, name, bytes) {
     if (css === null) return `${name}: the style sheet is not UTF-8 text`;
     const p = checkCss(css, l?.assets ?? []);
     return p && `${name}: ${p}`;
+  }
+  if (ext === 'png' && l?.app_icon === name) {
+    if (!starts([0x89, 'P', 'N', 'G', 13, 10, 26, 10]) || b.length < 24 || String.fromCharCode(...b.slice(12, 16)) !== 'IHDR') return `${name}: the app icon is not a PNG file`;
+    const side = i => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
+    const w = side(16), h = side(20);
+    if (w !== h || w < APP_ICON_MIN || w > APP_ICON_MAX) return `${name}: the app icon must be square, ${APP_ICON_MIN} to ${APP_ICON_MAX} pixels (it is ${w} x ${h})`;
+    return null;
   }
   const ok = {
     png: () => starts([0x89, 'P', 'N', 'G']), jpg: () => starts([0xff, 0xd8, 0xff]), jpeg: () => starts([0xff, 0xd8, 0xff]),
