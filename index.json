@@ -4,15 +4,16 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/aurora",
-      "rev": "60b8d5ffdd2ddb8212f6c84362524c2a392e689f",
+      "rev": "3454f1c0b5c5fd1905eea63e2ac162751b3b4962",
       "manifest": {
         "schema": 1,
         "id": "aurora",
         "name": "Aurora",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "author": "glyphmusic",
-        "description": "Teal light over a violet night sky.",
+        "description": "Teal light over a violet night sky, with star hearts, its own app icon and startup animation.",
         "license": "MIT",
+        "min_app": "0.12.11",
         "kind": "theme",
         "theme": {
           "accent": "#3ee6c1",
@@ -22,22 +23,54 @@
             "#7cf5c8"
           ],
           "base": "#020406"
+        },
+        "look": {
+          "icons": {
+            "heart": "icons/heart.svg",
+            "heart-fill": "icons/heart-fill.svg"
+          },
+          "app_icon": "app-icon.png",
+          "splash": {
+            "art": [
+              "   .      *       .       *  ",
+              "        ~~~~~~~~~~~~~~        ",
+              "   ~~~~~~~~~~~~~~~~~~~~~~~~   ",
+              " ~~~~~~      ~~~~~~      ~~~~ ",
+              "      *    ~~~~~~~~~~  .      ",
+              "   ~~~~~~~~~~~~~~~~~~~~~~~~   ",
+              "    /\\      /\\/\\       /\\     ",
+              "   /  \\/\\  /    \\/\\_  /  \\__  ",
+              "__/      \\/          \\/      \\"
+            ],
+            "tint": [
+              "   w      w       w       w  ",
+              "        pppppppppppppp        ",
+              "   pppppppppppppppppppppppp   ",
+              " pppppp      pppppp      pppp ",
+              "      w    pppppppppp  w      ",
+              "   pppppppppppppppppppppppp   ",
+              "    ww      wwww       ww     ",
+              "   wwwwwww  wwwwwwww  wwwww  ",
+              "wwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+            ]
+          }
         }
       },
-      "updated": "2026-10-22T22:15:49+02:00"
+      "updated": "2026-11-25T11:48:44+01:00"
     },
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/citrus",
-      "rev": "60b8d5ffdd2ddb8212f6c84362524c2a392e689f",
+      "rev": "3454f1c0b5c5fd1905eea63e2ac162751b3b4962",
       "manifest": {
         "schema": 1,
         "id": "citrus",
         "name": "Citrus",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "author": "glyphmusic",
-        "description": "Lime and lemon on black.",
+        "description": "Lime and lemon on black, with citrus-slice hearts, its own app icon and startup animation.",
         "license": "MIT",
+        "min_app": "0.12.11",
         "kind": "theme",
         "theme": {
           "accent": "#d4f54a",
@@ -47,21 +80,48 @@
             "#f3f57a"
           ],
           "base": "#030402"
+        },
+        "look": {
+          "icons": {
+            "heart": "icons/heart.svg",
+            "heart-fill": "icons/heart-fill.svg"
+          },
+          "app_icon": "app-icon.png",
+          "splash": {
+            "art": [
+              "       .-''''-.       ",
+              "     .'\\  |   /'.     ",
+              "    /   \\ |  /   \\    ",
+              "   |-----(@)------|   ",
+              "    \\   / |  \\   /    ",
+              "     './  |   \\.'     ",
+              "       '-....-'       "
+            ],
+            "tint": [
+              "       wwwwwwww       ",
+              "     wwppwwwwwppww     ",
+              "    wwwwpwwwwpwwwww    ",
+              "   wppppppppppppppw   ",
+              "    wwwwpwwwwpwwwww    ",
+              "     wwpwwwwwwpww     ",
+              "       wwwwwwww       "
+            ]
+          }
         }
       },
-      "updated": "2026-10-22T22:15:49+02:00"
+      "updated": "2026-11-25T11:48:44+01:00"
     },
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/sakura",
-      "rev": "60b8d5ffdd2ddb8212f6c84362524c2a392e689f",
+      "rev": "3454f1c0b5c5fd1905eea63e2ac162751b3b4962",
       "manifest": {
         "schema": 1,
         "id": "sakura",
         "name": "Sakura",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "author": "glyphmusic",
-        "description": "Soft cherry blossom pink, with a rounded font, round corners and blossom hearts.",
+        "description": "Soft cherry blossom pink, with a rounded font, round corners, blossom hearts, its own app icon and startup animation.",
         "license": "MIT",
         "min_app": "0.12.11",
         "kind": "theme",
@@ -81,10 +141,35 @@
           "icons": {
             "heart": "icons/heart.svg",
             "heart-fill": "icons/heart-fill.svg"
+          },
+          "app_icon": "app-icon.png",
+          "splash": {
+            "art": [
+              "         .--.         ",
+              "   .--. (    ) .--.   ",
+              "  (    `-.  .-'    )  ",
+              "   `-.   (@@)   .-'   ",
+              "  .-'  .-'  `-.  `-.  ",
+              " (    (   ||   )    ) ",
+              "  `--' `-.||.-' `--'  ",
+              "          ||          ",
+              "     *    ||    *     "
+            ],
+            "tint": [
+              "         wwww         ",
+              "   wwww wwwwww wwww   ",
+              "  wwwwwwwwwwwwwwwwww  ",
+              "   wwwwwwwppwwwwwww   ",
+              "  wwwwwwwwwwwwwwwwwww ",
+              " wwwwwwwwwwwwwwwwwwww ",
+              "  wwwwwwwwwwwwwwwwww  ",
+              "          ww          ",
+              "     p    ww    p     "
+            ]
           }
         }
       },
-      "updated": "2026-11-25T10:42:01+01:00"
+      "updated": "2026-11-25T11:48:44+01:00"
     }
   ]
 }
