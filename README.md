@@ -72,15 +72,16 @@ Glyph's built-in themes, as a starting point:
 
 ## Add a look
 
-A theme changes colours. A **look** can change the whole interface: the font, how round corners are, Glyph's icons, background pictures and a style sheet. Add a `look` object to a theme or an extension. It is pure data (no code), so it also installs from **Community**. Looks need Glyph 0.12.11 or newer, so set `"min_app": "0.12.11"`.
+A theme changes colours. A **look** can change the whole interface: the font, how round corners are, Glyph's icons, the app icon, background pictures and a style sheet. Add a `look` object to a theme or an extension. It is pure data (no code), so it also installs from **Community**. Looks need Glyph 0.12.11 or newer, so set `"min_app": "0.12.11"`.
 
 ```json
 "look": {
-  "font": "rounded",
+  "font": "fonts/MyFont.woff2",
+  "app_icon": "icon.png",
   "radius": 1.6,
   "backgrounds": ["backgrounds/night.webp"],
   "css": "look.css",
-  "assets": ["fonts/MyFont.woff2", "textures/grain.png"],
+  "assets": ["textures/grain.png"],
   "icons": { "heart": "icons/heart.svg", "heart-fill": "icons/heart-fill.svg" }
 }
 ```
@@ -89,7 +90,9 @@ Every field is optional, but a look needs at least one. File paths are relative 
 
 | Field | Rules |
 |---|---|
-| `font` | `inter` (Glyph's), `system`, `rounded`, `serif` or `mono`. Fonts come from the system. For your own font, put it in `assets` and load it with `@font-face` in the style sheet. |
+| `font` | the font for all text: `inter` (Glyph's), `system`, `rounded`, `serif` or `mono` (from the system), or the path of your own font file (`.woff2`, `.woff`, `.ttf`, `.otf`, at most 2 MB). Own font files need Glyph 0.13.6 or newer. |
+| `mono` | the monospaced font (numbers, ASCII art), like `font`. Needs Glyph 0.13.6 or newer. |
+| `app_icon` | your own app icon: a square `.png`, 64 to 1024 pixels, at most 1 MB. Glyph shows it on the window, taskbar, tray and Dock (on Android in the app overview) while the look is in use. Needs Glyph 0.13.6 or newer. |
 | `radius` | `0` to `2`: how round corners are. `0` square, `1` Glyph's (10 px), `2` very round. |
 | `backgrounds` | up to 8 pictures (`.png`, `.jpg`, `.webp`, at most 8 MB each). People pick them in **Settings › Appearance › Background picture**; a look never switches the background by itself. |
 | `css` | a `.css` file, at most 128 KB, added after Glyph's own styles for every window, menu and dialog. |

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validate, checkCss, checkLookFile, PERMISSIONS, ITEM_TYPES} from './manifest.mjs';
+import {validate, checkCss, checkLookFile, lookFiles, PERMISSIONS, ITEM_TYPES} from './manifest.mjs';
 
 test('looks: themes and extensions may bring font, corners, pictures and a style sheet', () => {
   const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension', look: {font: 'serif', radius: 1.5, css: 'style.css', backgrounds: ['bg/a.webp']}};
@@ -33,6 +33,32 @@ test('looks: the style sheet only loads its own files and stays balanced', () =>
   assert.equal(checkLookFile(look, 'h.svg', new TextEncoder().encode('<svg/>')), null);
   assert.ok(checkLookFile(look, 'h.svg', new TextEncoder().encode('<svg>' + 'x'.repeat(40000))));
   assert.ok(checkLookFile(look, 's.css', new TextEncoder().encode('} body { display: none }')));
+});
+
+test('looks: own font files, monospaced font and app icon', () => {
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  const look = {font: 'fonts/Literata.woff2', mono: 'fonts/Code.ttf', app_icon: 'icon.png'};
+  assert.deepEqual(validate({...ext, look}), []);
+  assert.deepEqual(lookFiles({look}), ['fonts/Code.ttf', 'fonts/Literata.woff2', 'icon.png']);
+  assert.deepEqual(validate({...ext, look: {font: 'f/a.woff2', mono: 'f/a.woff2'}}), []);
+  assert.deepEqual(validate({...ext, look: {mono: 'serif'}}), []);
+  for (const bad of [{font: 'f/a.exe'}, {font: '../a.woff2'}, {mono: 'pixel'}, {app_icon: 'icon.svg'},
+    {font: 'f/a.woff2', assets: ['f/a.woff2']}, {app_icon: 'a.png', backgrounds: ['a.png']}]) {
+    assert.ok(validate({...ext, look: bad}).length, JSON.stringify(bad));
+  }
+  const png = (w, h) => {
+    const b = new Uint8Array(24);
+    b.set([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+    new DataView(b.buffer).setUint32(16, w);
+    new DataView(b.buffer).setUint32(20, h);
+    return b;
+  };
+  assert.equal(checkLookFile(look, 'icon.png', png(512, 512)), null);
+  assert.ok(checkLookFile(look, 'icon.png', png(512, 256)));
+  assert.ok(checkLookFile(look, 'icon.png', png(32, 32)));
+  assert.ok(checkLookFile(look, 'icon.png', png(2048, 2048)));
+  assert.equal(checkLookFile(look, 'fonts/Code.ttf', new Uint8Array([0, 1, 0, 0, 9])), null);
+  assert.ok(checkLookFile(look, 'fonts/Literata.woff2', new TextEncoder().encode('nope')));
 });
 
 const example = () => JSON.parse(readFileSync(new URL('../examples/glyph-lastfm-profile/glyph-plugin.json', import.meta.url), 'utf8'));
