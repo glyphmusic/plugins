@@ -252,6 +252,33 @@
             }
           ]
         },
+        "home": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "order": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } },
+            "hide": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } }
+          },
+          "description": "Home page sections to put first (order) or hide: greeting, cards, recent, new_releases, mixes, recs, trending."
+        },
+        "sidebar": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "order": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } },
+            "hide": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } }
+          },
+          "description": "Sidebar entries to put first (order) or hide: home, search, library, now_playing, lists. Settings always stays."
+        },
+        "tabs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "order": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } },
+            "hide": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" } }
+          },
+          "description": "Phone tabs to put first (order) or hide: home, search, library. At least one tab always stays."
+        },
         "app_icon": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_./-]+\\.png$",

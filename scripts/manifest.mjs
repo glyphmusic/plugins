@@ -29,6 +29,13 @@ export const FONT_FILES = ['woff2', 'woff', 'ttf', 'otf'];
 /** The app icon: a square .png, at most this big, sides in pixels. */
 export const MAX_APP_ICON = 1024 * 1024;
 export const APP_ICON_MIN = 64, APP_ICON_MAX = 1024;
+/** Parts a look can order and hide: home page sections, sidebar entries, phone tabs. Unknown names are allowed (newer Glyph). */
+export const LAYOUT_AREAS = {
+  home: ['greeting', 'cards', 'recent', 'new_releases', 'mixes', 'recs', 'trending'],
+  sidebar: ['home', 'search', 'library', 'now_playing', 'lists'],
+  tabs: ['home', 'search', 'library'],
+};
+export const MAX_LAYOUT_PARTS = 30;
 /** Whether a look's `font` / `mono` names a font file. */
 export const isFontFile = f => typeof f === 'string' && FONT_FILES.includes((f.split('.').pop() ?? '').toLowerCase()) && f.includes('.');
 /** Background pictures per look, and the size of each. */
@@ -132,9 +139,20 @@ function validateLook(l) {
   if (!isObj(l)) return ['"look" must be an object'];
   const err = [];
   const bgs = l.backgrounds ?? [], assets = l.assets ?? [], icons = l.icons ?? {};
-  if (l.font === undefined && l.mono === undefined && l.app_icon === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
+  if (l.font === undefined && l.mono === undefined && l.app_icon === undefined && l.home === undefined && l.sidebar === undefined && l.tabs === undefined && l.radius === undefined && l.css === undefined && !(Array.isArray(bgs) && bgs.length)
     && !(Array.isArray(assets) && assets.length) && !(isObj(icons) && Object.keys(icons).length)) {
-    err.push('look: needs a font, mono, app_icon, radius, backgrounds, css, assets or icons');
+    err.push('look: needs a font, mono, app_icon, radius, backgrounds, css, assets, icons, home, sidebar or tabs');
+  }
+  for (const area of Object.keys(LAYOUT_AREAS)) {
+    const spec = l[area];
+    if (spec === undefined) continue;
+    if (!isObj(spec) || Object.keys(spec).some(k => k !== 'order' && k !== 'hide')) { err.push(`look.${area} must be an object with "order" and/or "hide"`); continue; }
+    for (const key of ['order', 'hide']) {
+      const list = spec[key] ?? [];
+      if (!Array.isArray(list) || list.length > MAX_LAYOUT_PARTS) err.push(`look.${area}.${key} takes up to ${MAX_LAYOUT_PARTS} names`);
+      else if (list.some(n => typeof n !== 'string' || !/^[a-z0-9_-]{1,40}$/.test(n))) err.push(`look.${area}.${key} names are 1-40 of a-z, 0-9, - and _`);
+      else if (new Set(list).size !== list.length) err.push(`look.${area}.${key} names each only once`);
+    }
   }
   const ext = f => (f.split('.').pop() ?? '').toLowerCase();
   for (const key of ['font', 'mono']) {
