@@ -99,6 +99,7 @@ Every field is optional, but a look needs at least one. File paths are relative 
 | `splash` | your own startup animation: `{"art": [rows of ASCII], "tint": [same rows, p = accent colour], "speed": 1}`, up to 40 rows of 60 characters. Shown from the next start. Needs Glyph 0.13.6 or newer. |
 | `app_icon` | your own app icon: a square `.png`, 64 to 1024 pixels, at most 1 MB. Glyph shows it on the window, taskbar, tray and Dock (on Android in the app overview) while the look is in use. Needs Glyph 0.13.6 or newer. |
 | `radius` | `0` to `2`: how round corners are. `0` square, `1` Glyph's (10 px), `2` very round. |
+| `radii` | corners of single parts, `0` to `2` like `radius`: `{"covers": 0, "buttons": 2}`. Parts: `covers`, `buttons`, `fields`, `cards`, `menus`, `dialogs`, `player`. Parts not named follow `radius`. Needs Glyph 0.14.0 or newer. |
 | `backgrounds` | up to 8 pictures (`.png`, `.jpg`, `.webp`, at most 8 MB each). People pick them in **Settings › Appearance › Background picture**; a look never switches the background by itself. |
 | `css` | a `.css` file, at most 128 KB, added after Glyph's own styles for every window, menu and dialog. |
 | `assets` | up to 40 files the style sheet may use with `url()`: fonts (`.woff2`, `.woff`, `.ttf`, `.otf`) and pictures (`.png`, `.jpg`, `.webp`, `.gif`, `.svg`), at most 2 MB each. |

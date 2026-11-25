@@ -315,6 +315,12 @@
           "maximum": 2,
           "description": "Corner roundness: 0 square, 1 Glyph's, 2 very round."
         },
+        "radii": {
+          "type": "object",
+          "description": "Corner roundness of single parts (0 to 2, like radius); parts not named follow radius. Glyph 0.14.0 or newer.",
+          "propertyNames": { "enum": ["covers", "buttons", "fields", "cards", "menus", "dialogs", "player"] },
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 2 }
+        },
         "backgrounds": {
           "type": "array",
           "maxItems": 8,
