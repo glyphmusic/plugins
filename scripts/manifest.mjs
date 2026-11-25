@@ -66,6 +66,26 @@ export const validRepo = r => typeof r === 'string' && /^[A-Za-z0-9_.-]{1,100}\/
   && !r.split('/').some(s => s === '.' || s === '..');
 export const validPath = p => p === '' || (typeof p === 'string' && p.length <= 200 && /^[A-Za-z0-9_.\/-]+$/.test(p)
   && p.split('/').every(s => s && s !== '.' && s !== '..'));
+/** Glyph versions that first understand a part of a look. An older Glyph
+ *  ignores what it doesn't know and would install the plugin without it, so
+ *  a plugin using one must set `min_app` to at least that version. */
+export const LOOK_SINCE = [
+  ['look', '0.12.11', l => true],
+  ['look.app_icon', '0.13.6', l => l.app_icon !== undefined],
+  ['an own font file', '0.13.6', l => isFontFile(l.font)],
+  ['look.mono', '0.13.6', l => l.mono !== undefined],
+  ['look.home, look.sidebar and look.tabs', '0.13.6', l => ['home', 'sidebar', 'tabs'].some(k => l[k] !== undefined)],
+  ['look.sidebar_position', '0.13.6', l => l.sidebar_position !== undefined],
+  ['look.splash', '0.13.6', l => l.splash !== undefined],
+];
+
+/** `a` is an older version than `b` (both like 1.2.3). */
+const olderThan = (a, b) => {
+  const x = a.split(/[-+]/)[0].split('.').map(Number), y = b.split('.').map(Number);
+  const i = x.findIndex((v, k) => v !== y[k]);
+  return i >= 0 && x[i] < y[i];
+};
+
 /** Longest `changes` text. */
 export const MAX_CHANGES = 300;
 
@@ -128,6 +148,13 @@ export function validate(m) {
   }
   if (m.changes !== undefined && typeof m.changes !== 'string') err.push('changes must be text');
   else if (chars(m.changes) > MAX_CHANGES) err.push(`changes may have at most ${MAX_CHANGES} characters`);
+  if (isObj(m.look)) {
+    for (const [what, since, uses] of LOOK_SINCE) {
+      if (uses(m.look) && (typeof m.min_app !== 'string' || !semver.test(m.min_app) || olderThan(m.min_app, since))) {
+        err.push(`${what} needs Glyph ${since}: set "min_app" to "${since}" or higher`);
+      }
+    }
+  }
   if (m.theme !== undefined) err.push(...validateTheme(m.theme));
   if (m.look !== undefined) err.push(...validateLook(m.look));
   if (!KINDS.includes(m.kind)) {

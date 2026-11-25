@@ -74,7 +74,7 @@ Glyph's built-in themes, as a starting point:
 
 ## Add a look
 
-A theme changes colours. A **look** can change the whole interface: the font, how round corners are, Glyph's icons, the app icon, background pictures and a style sheet. Add a `look` object to a theme or an extension. It is pure data (no code), so it also installs from **Community**. Looks need Glyph 0.12.11 or newer, so set `"min_app": "0.12.11"`.
+A theme changes colours. A **look** can change the whole interface: the font, how round corners are, Glyph's icons, the app icon, background pictures and a style sheet. Add a `look` object to a theme or an extension. It is pure data (no code), so it also installs from **Community**. Looks need Glyph 0.12.11 or newer, so set `"min_app": "0.12.11"`. The app icon, an own font file, `mono`, `home`, `sidebar`, `tabs`, `sidebar_position` and `splash` need Glyph 0.13.6, so set `"min_app": "0.13.6"` when you use one. The check refuses a lower `min_app`: an older Glyph would install the plugin without those parts.
 
 ```json
 "look": {
