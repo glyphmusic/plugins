@@ -15,12 +15,22 @@
 // for plugins in a folder of a shared repo) and `updated` (last push, or the
 // folder's last commit here). CI runs this daily so both stay fresh;
 // GITHUB_TOKEN raises the API limit.
+//
+// Each entry also lists earlier `versions` (newest first, at most
+// MAX_VERSIONS): the commits the index pinned before (the git history of
+// plugins/<id>.json), or for plugins in this repo the commits that changed
+// their manifest. Glyph offers the newest one that fits when the newest
+// version needs another Glyph, and lets people go back to one. Earlier
+// versions that no longer pass the checks are left out.
 // No dependencies: Node 20+ (global fetch).
 
 import {readFileSync, writeFileSync, readdirSync, existsSync} from 'node:fs';
 import {execSync} from 'node:child_process';
 
-import {MANIFEST, MAX_CODE, MAX_LOOK_TOTAL, checkCode, checkLookFile, lookFiles, lookMaxSize, validate, validRepo, validPath} from './manifest.mjs';
+import {MANIFEST, MAX_CODE, MAX_LOOK_TOTAL, checkCode, checkLookFile, lookFiles, lookMaxSize, semver, validate, validRepo, validPath} from './manifest.mjs';
+
+/** Most earlier versions listed per plugin (as Glyph keeps them). */
+const MAX_VERSIONS = 10;
 
 /** Format of index.json itself (not of the manifests inside). */
 const INDEX_FORMAT = 1;
@@ -98,6 +108,67 @@ async function lookProblems(entry, rev, manifest) {
   return out;
 }
 
+const git = args => execSync(`git ${args}`, {cwd: root, stdio: ['ignore', 'pipe', 'ignore']}).toString();
+
+/** Numbers of a semantic version, for comparing (pre-releases count as lower). */
+function versionKey(v) {
+  const [core, pre] = v.split('+')[0].split(/-(.*)/s);
+  return [...core.split('.').map(Number), pre ? 0 : 1];
+}
+function compareVersions(a, b) {
+  const x = versionKey(a), y = versionKey(b);
+  for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return x[i] - y[i];
+  return 0;
+}
+
+/** Earlier commits of a plugin: [rev, manifest] pairs, newest first. */
+async function earlierCommits(entry, file, currentRev) {
+  const out = [];
+  const isSelf = entry.repo === SELF && entry.rev === 'self';
+  if (isSelf) {
+    const at = entry.path ? `${entry.path}/${MANIFEST}` : MANIFEST;
+    let shas = [];
+    try { shas = git(`log --format=%H -- "${at}"`).split('\n').filter(Boolean); } catch { return out; }
+    for (const sha of shas) {
+      if (sha === currentRev) continue;
+      try { out.push([sha, JSON.parse(git(`show ${sha}:${at}`))]); } catch { /* not there or not JSON */ }
+    }
+    return out;
+  }
+  // The revs this entry pinned before, from the history of its file here.
+  let shas = [];
+  try { shas = git(`log --format=%H -- "plugins/${file}"`).split('\n').filter(Boolean); } catch { return out; }
+  const seen = new Set([currentRev]);
+  for (const sha of shas) {
+    let old;
+    try { old = JSON.parse(git(`show ${sha}:plugins/${file}`)); } catch { continue; }
+    if (old.repo !== entry.repo || (old.path ?? '') !== entry.path || !/^[0-9a-f]{40}$/.test(old.rev ?? '') || seen.has(old.rev)) continue;
+    seen.add(old.rev);
+    try { out.push([old.rev, await manifestOf(entry, old.rev)]); } catch { /* gone from GitHub */ }
+  }
+  return out;
+}
+
+/** Earlier versions of `manifest` (see the top of this file). */
+async function earlierVersions(entry, file, rev, manifest) {
+  const out = [];
+  for (const [r, m] of await earlierCommits(entry, file, rev)) {
+    if (out.length >= MAX_VERSIONS) break;
+    if (!m || m.id !== manifest.id || typeof m.version !== 'string' || !semver.test(m.version)) continue;
+    if (compareVersions(m.version, manifest.version) >= 0 || out.some(v => v.version === m.version)) continue;
+    if (validate(m).length) continue;
+    const v = {version: m.version, rev: r};
+    if (m.min_app) v.min_app = m.min_app;
+    if (m.max_app) v.max_app = m.max_app;
+    if (m.changes) v.changes = m.changes;
+    v.code = !!m.main;
+    const permissions = [...(m.permissions ?? []), ...(m.network ?? []).map(h => `network:${h}`)];
+    if (permissions.length) v.permissions = permissions;
+    out.push(v);
+  }
+  return out.sort((a, b) => compareVersions(b.version, a.version));
+}
+
 async function manifestOf(entry, rev) {
   const file = entry.path ? `${entry.path}/${MANIFEST}` : MANIFEST;
   if (entry.repo === SELF && entry.rev === 'self') {
@@ -148,6 +219,8 @@ for (const f of files) {
   ids.add(manifest.id);
   const out = {repo: entry.repo, path: entry.path, rev, manifest};
   if (!check) {
+    const versions = await earlierVersions(entry, f, rev, manifest);
+    if (versions.length) out.versions = versions;
     if (isSelf) {
       out.updated = lastCommit(entry.path);
     } else {

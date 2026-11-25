@@ -7,6 +7,7 @@
   "description": "Soft cherry blossom pink, with a rounded font, round corners, blossom hearts, its own app icon and startup animation.",
   "license": "MIT",
   "min_app": "0.12.11",
+  "changes": "An own app icon and a blossom startup animation.",
   "kind": "theme",
   "theme": {
     "accent": "#ffb7d0",

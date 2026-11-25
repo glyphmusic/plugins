@@ -55,6 +55,16 @@
       "type": "string",
       "description": "Oldest Glyph version the plugin works with"
     },
+    "max_app": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(x|(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?))?$",
+      "description": "Newest Glyph version the plugin works with: a version (0.14.2) or a whole minor line (0.14 or 0.14.x). A newer Glyph keeps the plugin but pauses it until an update fits."
+    },
+    "changes": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "What changed in this version, shown with the update"
+    },
     "kind": {
       "enum": [
         "theme",

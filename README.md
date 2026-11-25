@@ -57,6 +57,8 @@ To share it, link to `https://glyph.my/plugins/<id>`. That page shows your theme
 | `author`, `license` | no | up to 40 characters each |
 | `description` | no | up to 200 characters |
 | `min_app` | no | oldest Glyph version the plugin needs (`0.7.0`) |
+| `max_app` | no | newest Glyph version the plugin works with: a version (`0.14.2`) or a whole minor line (`0.14` or `0.14.x`, any patch of it). See [Versions](#versions). |
+| `changes` | no | what changed in this version, up to 300 characters. Glyph shows it with the update. |
 | `kind` | yes | `"theme"` (or `"extension"`, see below) |
 | `theme.accent` | yes | `#rrggbb`: buttons, progress bars, highlights |
 | `theme.glow` | no | three `#rrggbb` colours, dark to bright, used for the background glow while nothing plays. Without them each view uses its own colours. |
@@ -145,6 +147,17 @@ Open a pull request that adds `plugins/<id>.json`:
 - To ship an update, raise `version` in your repo and open a pull request that changes `rev`.
 
 Installed plugins update automatically (unless the user turned that off) when a higher `version` from the same repository shows up. An update that asks for new permissions waits for the user to agree.
+
+### Versions
+
+The index remembers earlier versions: every `rev` this list pinned before (for plugins in this repo, every commit that changed the manifest). Up to 10 earlier versions are kept per plugin.
+
+- **`min_app` and `max_app`** say which Glyph versions a version works with. A Glyph outside that range does not run the plugin. If it was installed already, it stays installed but **paused** (Settings › Plugins › Paused) until an update of Glyph or of the plugin fits.
+- If the newest version does not fit someone's Glyph, Glyph offers the newest earlier version that does. So when you raise `min_app`, people on an older Glyph still get your last version for them.
+- Each plugin's page in Glyph lists its versions. People can go back to an earlier one; Glyph then keeps it (**Keep this version**: no automatic updates) until they turn that off or pick the newest again.
+- Write a short `changes` text for each version, so people see what is new before they update.
+
+`max_app` and `changes` need Glyph 0.13.6 or newer; older versions ignore them.
 
 ## Make an extension
 
