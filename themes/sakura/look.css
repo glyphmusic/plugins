@@ -1,0 +1,18 @@
+/* Sakura: soft pink lines and rounder panels. Uses only Glyph's stable hooks. */
+:root {
+  --border: rgba(255, 183, 208, .18);
+  --border-strong: rgba(255, 183, 208, .26);
+  --hover: rgba(255, 183, 208, .08);
+  --active: rgba(255, 183, 208, .14);
+}
+
+[data-part="player-bar"] {
+  border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 0 24px rgba(255, 183, 208, .10);
+}
+
+[data-part="menu"],
+[data-part="dialog"],
+[data-part="tooltip"] {
+  border: 1px solid var(--border-strong);
+}
