@@ -61,6 +61,15 @@ test('looks: own font files, monospaced font and app icon', () => {
   assert.ok(checkLookFile(look, 'fonts/Literata.woff2', new TextEncoder().encode('nope')));
 });
 
+test('looks: order and hide parts of the home page, sidebar and tabs', () => {
+  const ext = {schema: 2, id: 'neon', name: 'Neon', version: '1.0.0', kind: 'extension'};
+  assert.deepEqual(validate({...ext, look: {home: {order: ['mixes', 'recent'], hide: ['trending']}, sidebar: {hide: ['now_playing']}, tabs: {order: ['library']}}}), []);
+  assert.deepEqual(validate({...ext, look: {home: {hide: ['from-the-future']}}}), []);
+  for (const bad of [{home: []}, {home: {hide: ['Recent']}}, {sidebar: {order: ['home', 'home']}}, {tabs: {show: ['home']}}]) {
+    assert.ok(validate({...ext, look: bad}).length, JSON.stringify(bad));
+  }
+});
+
 const example = () => JSON.parse(readFileSync(new URL('../examples/glyph-lastfm-profile/glyph-plugin.json', import.meta.url), 'utf8'));
 
 test('own-key Last.fm setup is accepted without requiring a built Wasm artifact', () => {

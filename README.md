@@ -92,6 +92,7 @@ Every field is optional, but a look needs at least one. File paths are relative 
 |---|---|
 | `font` | the font for all text: `inter` (Glyph's), `system`, `rounded`, `serif` or `mono` (from the system), or the path of your own font file (`.woff2`, `.woff`, `.ttf`, `.otf`, at most 2 MB). Own font files need Glyph 0.13.6 or newer. |
 | `mono` | the monospaced font (numbers, ASCII art), like `font`. Needs Glyph 0.13.6 or newer. |
+| `home`, `sidebar`, `tabs` | put parts in a new order or hide them: `{"order": ["mixes", "recent"], "hide": ["trending"]}`. Home page: `greeting`, `cards`, `recent`, `new_releases`, `mixes`, `recs`, `trending`. Sidebar: `home`, `search`, `library`, `now_playing`, `lists` (Settings always stays). Phone tabs: `home`, `search`, `library`. Needs Glyph 0.13.6 or newer. |
 | `app_icon` | your own app icon: a square `.png`, 64 to 1024 pixels, at most 1 MB. Glyph shows it on the window, taskbar, tray and Dock (on Android in the app overview) while the look is in use. Needs Glyph 0.13.6 or newer. |
 | `radius` | `0` to `2`: how round corners are. `0` square, `1` Glyph's (10 px), `2` very round. |
 | `backgrounds` | up to 8 pictures (`.png`, `.jpg`, `.webp`, at most 8 MB each). People pick them in **Settings › Appearance › Background picture**; a look never switches the background by itself. |
