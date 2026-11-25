@@ -4,7 +4,7 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/aurora",
-      "rev": "5d9fb195bb7df20feefaaa1a94280b590d7c813d",
+      "rev": "9c8caadfdcdb57d0dd81d1c49626f9c1b15890ed",
       "manifest": {
         "schema": 1,
         "id": "aurora",
@@ -29,7 +29,7 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/citrus",
-      "rev": "5d9fb195bb7df20feefaaa1a94280b590d7c813d",
+      "rev": "9c8caadfdcdb57d0dd81d1c49626f9c1b15890ed",
       "manifest": {
         "schema": 1,
         "id": "citrus",
@@ -54,15 +54,16 @@
     {
       "repo": "glyphmusic/plugins",
       "path": "themes/sakura",
-      "rev": "5d9fb195bb7df20feefaaa1a94280b590d7c813d",
+      "rev": "9c8caadfdcdb57d0dd81d1c49626f9c1b15890ed",
       "manifest": {
         "schema": 1,
         "id": "sakura",
         "name": "Sakura",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "author": "glyphmusic",
-        "description": "Soft cherry blossom pink.",
+        "description": "Soft cherry blossom pink, with a rounded font, round corners and blossom hearts.",
         "license": "MIT",
+        "min_app": "0.12.11",
         "kind": "theme",
         "theme": {
           "accent": "#ffb7d0",
@@ -72,9 +73,18 @@
             "#ffd3e2"
           ],
           "base": "#050304"
+        },
+        "look": {
+          "font": "rounded",
+          "radius": 1.6,
+          "css": "look.css",
+          "icons": {
+            "heart": "icons/heart.svg",
+            "heart-fill": "icons/heart-fill.svg"
+          }
         }
       },
-      "updated": "2026-10-22T22:15:49+02:00"
+      "updated": "2026-11-25T10:42:01+01:00"
     }
   ]
 }
