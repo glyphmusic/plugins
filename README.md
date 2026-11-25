@@ -1,8 +1,8 @@
 # Glyph plugins
 
-Plugins for [Glyph](https://github.com/glyphmusic/apps): colour themes and extensions. Extensions can rename any text, hide settings, add their own settings page, sections on Glyph's pages and song menu entries, and run code (WebAssembly, in a sandbox) that controls playback, the library, search and settings and talks to the web, as far as its permissions allow. Glyph finds plugins under **Settings → Plugins**, and they are listed on [glyph.my/plugins](https://glyph.my/plugins).
+Plugins for [Glyph](https://github.com/glyphmusic/apps): colour themes, looks and extensions. Extensions can rename any text, hide settings, add their own settings page, sections on Glyph's pages and song menu entries, and run code (WebAssembly, in a sandbox) that controls playback, the library, search and settings and talks to the web, as far as its permissions allow. Glyph finds plugins under **Settings → Plugins**, and they are listed on [glyph.my/plugins](https://glyph.my/plugins).
 
-**Full documentation: [docs.glyph.my/plugins](https://docs.glyph.my/plugins)**: [quickstart](https://docs.glyph.my/plugins/quickstart), [extensions](https://docs.glyph.my/plugins/extensions), [API reference](https://docs.glyph.my/plugins/api), [settings and menus](https://docs.glyph.my/plugins/settings-ui), [how plugins work](https://docs.glyph.my/plugins/how-it-works), [manifest reference](https://docs.glyph.my/plugins/manifest), [designing a theme](https://docs.glyph.my/plugins/themes), [testing](https://docs.glyph.my/plugins/testing), [publishing](https://docs.glyph.my/plugins/publishing), [troubleshooting](https://docs.glyph.my/plugins/troubleshooting).
+**Full documentation: [docs.glyph.my/plugins](https://docs.glyph.my/plugins)**: [quickstart](https://docs.glyph.my/plugins/quickstart), [extensions](https://docs.glyph.my/plugins/extensions), [API reference](https://docs.glyph.my/plugins/api), [settings and menus](https://docs.glyph.my/plugins/settings-ui), [how plugins work](https://docs.glyph.my/plugins/how-it-works), [manifest reference](https://docs.glyph.my/plugins/manifest), [designing a theme](https://docs.glyph.my/plugins/themes), [looks](https://docs.glyph.my/plugins/looks), [testing](https://docs.glyph.my/plugins/testing), [publishing](https://docs.glyph.my/plugins/publishing), [troubleshooting](https://docs.glyph.my/plugins/troubleshooting).
 
 Fastest start: **[use the plugin template](https://github.com/glyphmusic/plugin-template/generate)** for a theme, or copy **[the example extension](examples/now-playing)** (Rust) for code.
 
@@ -11,7 +11,7 @@ Glyph looks for plugins in two places. It fetches both straight from GitHub on y
 | Section in Glyph | Source | Can install |
 |---|---|---|
 | **Listed** | `index.json` in this repo. Each version is checked against the plugin rules (valid file, pinned version) before it is added. | everything |
-| **Community** | every GitHub repo with the topic [`glyph-plugin`](https://github.com/topics/glyph-plugin). Nobody checks these. | plugins without code only (themes, texts, hidden rows) |
+| **Community** | every GitHub repo with the topic [`glyph-plugin`](https://github.com/topics/glyph-plugin). Nobody checks these. | plugins without code only (themes, looks, texts, hidden rows) |
 
 Glyph caches the list for an hour. **Refresh** loads it again. Old versions of Glyph show plugins they don't understand as "Needs a newer Glyph".
 
@@ -70,6 +70,54 @@ Glyph's built-in themes, as a starting point:
 | Ocean | `#4da3ff` | `#06124a` `#1d5cff` `#46dcff` | `#020308` |
 | Forest | `#3ddc84` | `#04210f` `#1f9d55` `#9cf0b8` | `#020503` |
 
+## Add a look
+
+A theme changes colours. A **look** can change the whole interface: the font, how round corners are, Glyph's icons, background pictures and a style sheet. Add a `look` object to a theme or an extension. It is pure data (no code), so it also installs from **Community**. Looks need Glyph 0.12.11 or newer, so set `"min_app": "0.12.11"`.
+
+```json
+"look": {
+  "font": "rounded",
+  "radius": 1.6,
+  "backgrounds": ["backgrounds/night.webp"],
+  "css": "look.css",
+  "assets": ["fonts/MyFont.woff2", "textures/grain.png"],
+  "icons": { "heart": "icons/heart.svg", "heart-fill": "icons/heart-fill.svg" }
+}
+```
+
+Every field is optional, but a look needs at least one. File paths are relative to the manifest.
+
+| Field | Rules |
+|---|---|
+| `font` | `inter` (Glyph's), `system`, `rounded`, `serif` or `mono`. Fonts come from the system. For your own font, put it in `assets` and load it with `@font-face` in the style sheet. |
+| `radius` | `0` to `2`: how round corners are. `0` square, `1` Glyph's (10 px), `2` very round. |
+| `backgrounds` | up to 8 pictures (`.png`, `.jpg`, `.webp`, at most 8 MB each). People pick them in **Settings › Appearance › Background picture**; a look never switches the background by itself. |
+| `css` | a `.css` file, at most 128 KB, added after Glyph's own styles for every window, menu and dialog. |
+| `assets` | up to 40 files the style sheet may use with `url()`: fonts (`.woff2`, `.woff`, `.ttf`, `.otf`) and pictures (`.png`, `.jpg`, `.webp`, `.gif`, `.svg`), at most 2 MB each. |
+| `icons` | Glyph icons to replace: icon name → `.svg` file (at most 32 KB). Names are the file names in [Glyph's icon folder](https://github.com/glyphmusic/apps/tree/main/assets/icons/ui) without `.svg`. Glyph draws the icon in the text colour, so only the shape counts. Toggles use `<name>-fill` when on (`heart-fill`), so replace both. |
+
+All files of one look together may have 32 MB.
+
+A theme's look shows while that theme is picked. An extension's look shows while the extension is on. **Settings › Plugins** always looks like Glyph, so a look can always be turned off there (`Ctrl+Alt+P` opens it from anywhere).
+
+### The style sheet
+
+Glyph's class names can change in any version. Use these hooks instead, which stay: `:root` (set variables here), `[data-skin]` (the main window) and `[data-part="…"]` with `titlebar`, `sidebar`, `page`, `side-panel`, `player-bar`, `settings`, `menu`, `dialog`, `toasts`, `tooltip`, `mini-player`, `tab-bar`, `mini-bar` or `now-playing`. Useful variables: `--font`, `--radius`, `--accent`, `--panel`, `--card`, `--border`, `--gap`. The full list is in [Looks](https://docs.glyph.my/plugins/looks).
+
+```css
+:root { --border: rgba(255, 183, 208, .22); }
+[data-part="player-bar"] { border-radius: calc(var(--radius) * 2); }
+```
+
+A look never loads anything from the internet. Glyph refuses a style sheet that:
+
+- uses `url()` for anything but a file in `assets` (no web addresses, no `data:`),
+- uses `@import`, `@namespace`, `@charset`, `image-set(`, `image(`, `src(`, `element(`, `expression(`, `javascript:`, `-moz-binding` or `behavior:`,
+- contains a backslash (`\`) or `<`,
+- is not UTF-8, or has unbalanced `{ }`, an unclosed comment or an unclosed string.
+
+Check your look with `node scripts/validate.mjs path/to/glyph-plugin.json`. It also checks that every file exists, has the right type and is not too big. [Sakura](themes/sakura) is an example theme with a look.
+
 ### Several plugins in one repo
 
 Put each manifest in its own folder (`themes/coral/glyph-plugin.json`). Only a manifest at the repo root shows up under **Community**. Plugins in folders appear once they are in this index (`"path": "themes/coral"`).
@@ -87,7 +135,7 @@ Open a pull request that adds `plugins/<id>.json`:
 ```
 
 - `rev` is the full commit hash of the version to list. Glyph installs exactly that version.
-- CI fetches the manifest at that commit and checks it (`node scripts/build-index.mjs --check`); for extensions with code it also checks that `main` exists at that commit and is a WebAssembly module of at most 16 MiB. After the merge it rebuilds `index.json`.
+- CI fetches the manifest at that commit and checks it (`node scripts/build-index.mjs --check`); for a look it also checks every file of the look; for extensions with code it also checks that `main` exists at that commit and is a WebAssembly module of at most 16 MiB. After the merge it rebuilds `index.json`.
 - To ship an update, raise `version` in your repo and open a pull request that changes `rev`.
 
 Installed plugins update automatically (unless the user turned that off) when a higher `version` from the same repository shows up. An update that asks for new permissions waits for the user to agree.
@@ -101,6 +149,7 @@ An extension is `"schema": 2, "kind": "extension"` plus any of:
 | `strings` | texts by language: your own (`<id>.…`) and replacements for any of Glyph's | no |
 | `hide` | Glyph settings rows to hide, by label key | no |
 | `theme` | colours, as for a theme | no |
+| `look` | font, corners, icons, background pictures and a style sheet ([see above](#add-a-look)) | no |
 | `main` | your WebAssembly module (`wasm32-unknown-unknown`, no WASI) | – |
 | `permissions` | `playback`, `library`, `search`, `settings`, `network`, `audio`, `lyrics_provider` | yes |
 | `network` | hosts the code may contact (`api.example.com`, `*.example.com`) | yes |
