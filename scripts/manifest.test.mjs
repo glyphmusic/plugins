@@ -138,3 +138,15 @@ test('JSON schema and executable validator advertise the same capabilities', () 
   assert.deepEqual(schema.$defs.item.properties.type.enum, ITEM_TYPES);
   assert.equal(schema.$defs.item.properties.required.type, 'boolean');
 });
+
+test('max_app: a version or a whole minor line, not below min_app; changes stay short', () => {
+  const base = {id: 'dusk', name: 'Dusk', version: '1.0.0', kind: 'theme', theme: {accent: '#ff8a3d'}};
+  for (const max_app of ['0.14.2', '0.14', '0.14.x', '1.0.0-beta.1']) assert.deepEqual(validate({...base, max_app}), [], max_app);
+  for (const max_app of ['0.14.y', 'latest', '1', 14]) assert.ok(validate({...base, max_app}).length, String(max_app));
+  assert.deepEqual(validate({...base, min_app: '0.14.5', max_app: '0.14'}), []);
+  assert.ok(validate({...base, min_app: '0.15.0', max_app: '0.14.x'}).length);
+  assert.ok(validate({...base, min_app: '0.14.3', max_app: '0.14.2'}).length);
+  assert.deepEqual(validate({...base, changes: 'Fixes the glow.'}), []);
+  assert.ok(validate({...base, changes: 'x'.repeat(301)}).length);
+  assert.ok(validate({...base, changes: 5}).length);
+});

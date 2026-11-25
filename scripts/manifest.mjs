@@ -66,6 +66,17 @@ export const validRepo = r => typeof r === 'string' && /^[A-Za-z0-9_.-]{1,100}\/
   && !r.split('/').some(s => s === '.' || s === '..');
 export const validPath = p => p === '' || (typeof p === 'string' && p.length <= 200 && /^[A-Za-z0-9_.\/-]+$/.test(p)
   && p.split('/').every(s => s && s !== '.' && s !== '..'));
+/** Longest `changes` text. */
+export const MAX_CHANGES = 300;
+
+/** `max_app` as [major, minor, patch, wholeLine]: a version, or a minor line (`0.14`, `0.14.x`). */
+export function parseMaxApp(s) {
+  if (typeof s !== 'string') return null;
+  if (semver.test(s)) { const [a, b, c] = s.split(/[-+]/)[0].split('.').map(Number); return [a, b, c, false]; }
+  const m = /^(0|[1-9]\d{0,8})\.(0|[1-9]\d{0,8})(\.x)?$/.exec(s);
+  return m ? [Number(m[1]), Number(m[2]), 0, true] : null;
+}
+
 export const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
 export const isHex = s => typeof s === 'string' && /^#?[0-9a-fA-F]{6}$/.test(s.trim());
 export const hexValue = s => parseInt(s.trim().replace('#', ''), 16);
@@ -104,6 +115,19 @@ export function validate(m) {
   if (chars(m.description) > 200) err.push('description may have at most 200 characters');
   if (typeof m.version !== 'string' || !semver.test(m.version)) err.push('version must be a semantic version like 1.0.0');
   if (m.min_app !== undefined && (typeof m.min_app !== 'string' || !semver.test(m.min_app))) err.push('min_app must be a semantic version like 0.7.0');
+  if (m.max_app !== undefined) {
+    const max = parseMaxApp(m.max_app);
+    if (!max) err.push('max_app must be a version like 0.14.2, 0.14 or 0.14.x');
+    else if (typeof m.min_app === 'string' && semver.test(m.min_app)) {
+      const min = m.min_app.split(/[-+]/)[0].split('.').map(Number);
+      const cmp = max[3] ? [min[0], min[1]] : min;
+      const top = max[3] ? [max[0], max[1]] : max.slice(0, 3);
+      const newer = cmp.findIndex((v, i) => v !== top[i]);
+      if (newer >= 0 && cmp[newer] > top[newer]) err.push('min_app must not be newer than max_app');
+    }
+  }
+  if (m.changes !== undefined && typeof m.changes !== 'string') err.push('changes must be text');
+  else if (chars(m.changes) > MAX_CHANGES) err.push(`changes may have at most ${MAX_CHANGES} characters`);
   if (m.theme !== undefined) err.push(...validateTheme(m.theme));
   if (m.look !== undefined) err.push(...validateLook(m.look));
   if (!KINDS.includes(m.kind)) {

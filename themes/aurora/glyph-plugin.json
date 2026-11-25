@@ -7,6 +7,7 @@
   "description": "Teal light over a violet night sky, with star hearts, its own app icon and startup animation.",
   "license": "MIT",
   "min_app": "0.12.11",
+  "changes": "Star hearts, an own app icon and a starry startup animation.",
   "kind": "theme",
   "theme": {
     "accent": "#3ee6c1",
